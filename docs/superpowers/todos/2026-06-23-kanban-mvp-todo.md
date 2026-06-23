@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 8, Recycle Bin API
-- Last completed commit: `d7f3e47 feat: add task recycle bin`
+- Last completed task: Task 9, Frontend Scaffold, API Client, and Auth Flow
+- Last completed commit: `135108e feat: scaffold react frontend`
 
 ## Completed
 
@@ -20,6 +20,7 @@
 - [x] Task 6: Sprints API.
 - [x] Task 7: Board Tasks, Filters, and Task Editing.
 - [x] Task 8: Recycle Bin API.
+- [x] Task 9: Frontend Scaffold, API Client, and Auth Flow.
 
 ## Resume Checklist
 
@@ -47,7 +48,7 @@
   - Authorize permanent deletion through team management permission.
   - Verify recycle-bin tests and full backend suite.
 
-- [ ] Task 9: Frontend Scaffold, API Client, and Auth Flow.
+- [x] Task 9: Frontend Scaffold, API Client, and Auth Flow.
   - Add Vite React TypeScript scaffold.
   - Add typed API client, auth context, app entry, and login page.
   - Verify frontend auth tests.
