@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 4, Snapshot Settings, Scheduler, and Backup Generation
-- Last completed commit: `460e1b2 feat: add database snapshot service`
+- Last completed task: Task 5, Teams, Memberships, and Authorization
+- Last completed commit: `620f9db feat: add teams and authorization`
 
 ## Completed
 
@@ -16,22 +16,17 @@
 - [x] Task 2: Authentication, seed admin, and current user API.
 - [x] Task 3: User administration API.
 - [x] Task 4: Snapshot Settings, Scheduler, and Backup Generation.
+- [x] Task 5: Teams, Memberships, and Authorization.
 
 ## Resume Checklist
 
 - [ ] Confirm worktree is clean: `git status --short --branch`.
 - [ ] Run backend baseline: `mvn -f backend/pom.xml test`.
-- [ ] Resume from Task 5 in the implementation plan; implement coding work directly.
+- [ ] Resume from Task 6 in the implementation plan; implement coding work directly.
 - [ ] For each remaining task, run spec compliance review and code quality review with subagents after direct implementation.
 - [ ] Do not start the next task until both reviews pass and any Important/Critical findings are fixed.
 
 ## Remaining Tasks
-
-- [ ] Task 5: Teams, Memberships, and Authorization.
-  - Add team roles, repositories, controllers, and authorization service.
-  - Implement team tree and membership management.
-  - Add helper fixtures for team/member tests.
-  - Verify team authorization tests and full backend suite.
 
 - [ ] Task 6: Sprints API.
   - Add sprint repository, DTOs, and controller.
