@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:kanban.sqlite3
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      connection-init-sql: PRAGMA foreign_keys=ON
+  sql:
+    init:
+      mode: always
+  session:
+    timeout: 8h
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 8h
+kanban:
+  seed-admin:
+    username: admin
+    password: admin123
+    display-name: 超级管理员
