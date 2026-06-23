@@ -5,7 +5,7 @@
 - Branch: `feature-kanban-mvp`
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
-- Required execution method: `superpowers:subagent-driven-development`
+- Required execution method: implement directly; use subagents only for spec compliance and code quality review.
 - Last completed task: Task 3, User Administration API
 - Last completed commit: `1bc5bca fix: make super admin demotion atomic`
 
@@ -20,8 +20,8 @@
 
 - [ ] Confirm worktree is clean: `git status --short --branch`.
 - [ ] Run backend baseline: `mvn -f backend/pom.xml test`.
-- [ ] Resume from Task 4 in the implementation plan using Subagent-Driven Development.
-- [ ] For each remaining task, dispatch an implementer subagent, then run spec compliance review, then code quality review.
+- [ ] Resume from Task 4 in the implementation plan; implement coding work directly.
+- [ ] For each remaining task, run spec compliance review and code quality review with subagents after direct implementation.
 - [ ] Do not start the next task until both reviews pass and any Important/Critical findings are fixed.
 
 ## Remaining Tasks
