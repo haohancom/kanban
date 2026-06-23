@@ -124,6 +124,30 @@ public abstract class IntegrationTestSupport {
         return fixture;
     }
 
+    protected Fixture createTeamTreeWithSprintAndAssignees() throws Exception {
+        Fixture fixture = new Fixture();
+        fixture.adminSession = loginAsAdmin();
+        fixture.adminUserId = userRepository.findByUsername("admin").get().getId();
+        fixture.memberUserId = createPlainMemberUser("board-member", "看板成员");
+        fixture.otherUserId = createPlainMemberUser("board-outsider", "其他成员");
+        fixture.rootTeamId = createTeam("研发部", null, fixture.adminUserId);
+        fixture.childTeamId = createTeam("平台组", fixture.rootTeamId, fixture.adminUserId);
+        fixture.teamId = fixture.childTeamId;
+        jdbc.update(
+                "insert into team_memberships (team_id, user_id, role) values (?, ?, ?)",
+                fixture.rootTeamId,
+                fixture.adminUserId,
+                "TEAM_CREATOR");
+        jdbc.update(
+                "insert into team_memberships (team_id, user_id, role) values (?, ?, ?)",
+                fixture.childTeamId,
+                fixture.memberUserId,
+                "TEAM_MEMBER");
+        fixture.sprintId = createSprint(fixture.childTeamId, "2026 Q3 冲刺");
+        fixture.memberSession = loginAsUser("board-member", "member123");
+        return fixture;
+    }
+
     private long createTeam(String name, Long parentId, long createdBy) {
         org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbc.update(connection -> {
@@ -142,6 +166,23 @@ public abstract class IntegrationTestSupport {
         Number key = keyHolder.getKey();
         if (key == null) {
             throw new IllegalStateException("Could not read generated team id");
+        }
+        return key.longValue();
+    }
+
+    private long createSprint(long teamId, String name) {
+        org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            java.sql.PreparedStatement statement = connection.prepareStatement(
+                    "insert into sprints (team_id, name) values (?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement.setLong(1, teamId);
+            statement.setString(2, name);
+            return statement;
+        }, keyHolder);
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Could not read generated sprint id");
         }
         return key.longValue();
     }
