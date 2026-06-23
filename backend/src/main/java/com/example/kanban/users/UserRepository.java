@@ -76,6 +76,13 @@ public class UserRepository {
                 id);
     }
 
+    public int countSuperAdministrators() {
+        Integer count = jdbc.queryForObject(
+                "select count(*) from users where super_admin = 1",
+                Integer.class);
+        return count == null ? 0 : count;
+    }
+
     public int countUsers() {
         Integer count = jdbc.queryForObject("select count(*) from users", Integer.class);
         return count == null ? 0 : count;

@@ -70,12 +70,59 @@ class UserControllerTest extends IntegrationTestSupport {
     }
 
     @Test
-    void nonSuperAdministratorCannotCreateUsers() throws Exception {
+    void duplicateUsernameReturnsConflict() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+
+        mvc.perform(post("/api/users").session(admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"displayName\":\"另一个管理员\",\"password\":\"secret123\",\"superAdmin\":false}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void updateRejectsBlankDisplayName() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+        long userId = createPlainMemberUser("blank-name", "小白");
+
+        mvc.perform(patch("/api/users/" + userId).session(admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"   \"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void cannotDemoteOnlySuperAdministrator() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+        String currentUser = mvc.perform(get("/api/auth/me").session(admin))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        mvc.perform(patch("/api/users/" + readId(currentUser)).session(admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"superAdmin\":false}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void nonSuperAdministratorCannotUseUserAdministrationEndpoints() throws Exception {
         MockHttpSession member = createPlainMemberSession();
+
+        mvc.perform(get("/api/users").session(member))
+                .andExpect(status().isForbidden());
 
         mvc.perform(post("/api/users").session(member)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"li\",\"displayName\":\"小李\",\"password\":\"secret123\",\"superAdmin\":false}"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(patch("/api/users/1").session(member)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"成员改名\"}"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(patch("/api/users/1/password").session(member)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"changed123\"}"))
                 .andExpect(status().isForbidden());
     }
 }
