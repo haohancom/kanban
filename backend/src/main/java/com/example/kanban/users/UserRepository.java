@@ -61,6 +61,30 @@ public class UserRepository {
                 UserRepository::mapUser);
     }
 
+    public void update(long id, String displayName, boolean superAdmin) {
+        jdbc.update(
+                "update users set display_name = ?, super_admin = ?, updated_at = current_timestamp where id = ?",
+                displayName,
+                superAdmin ? 1 : 0,
+                id);
+    }
+
+    public int demoteSuperAdministratorIfAnotherExists(long id) {
+        return jdbc.update(
+                "update users set super_admin = 0, updated_at = current_timestamp "
+                        + "where id = ? and super_admin = 1 "
+                        + "and exists (select 1 from users where super_admin = 1 and id <> ?)",
+                id,
+                id);
+    }
+
+    public void updatePasswordHash(long id, String passwordHash) {
+        jdbc.update(
+                "update users set password_hash = ?, updated_at = current_timestamp where id = ?",
+                passwordHash,
+                id);
+    }
+
     public int countUsers() {
         Integer count = jdbc.queryForObject("select count(*) from users", Integer.class);
         return count == null ? 0 : count;
