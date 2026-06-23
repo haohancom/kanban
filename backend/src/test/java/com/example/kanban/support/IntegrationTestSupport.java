@@ -1,6 +1,7 @@
 package com.example.kanban.support;
 
 import com.example.kanban.users.UserService;
+import com.example.kanban.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,6 +39,12 @@ public abstract class IntegrationTestSupport {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @DynamicPropertySource
     static void configureDatasource(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> "jdbc:sqlite:" + DATABASE_PATH.toAbsolutePath());
@@ -61,6 +69,21 @@ public abstract class IntegrationTestSupport {
                 .andReturn()
                 .getRequest()
                 .getSession(false);
+    }
+
+    protected MockHttpSession createPlainMemberSession() throws Exception {
+        createPlainMemberUser("member", "普通成员");
+        return (MockHttpSession) mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"member\",\"password\":\"member123\"}"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getRequest()
+                .getSession(false);
+    }
+
+    protected long createPlainMemberUser(String username, String displayName) {
+        return userRepository.create(username, displayName, passwordEncoder.encode("member123"), false);
     }
 
     protected String json(String content) {
