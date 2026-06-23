@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 3, User Administration API
-- Last completed commit: `1bc5bca fix: make super admin demotion atomic`
+- Last completed task: Task 4, Snapshot Settings, Scheduler, and Backup Generation
+- Last completed commit: `460e1b2 feat: add database snapshot service`
 
 ## Completed
 
@@ -15,22 +15,17 @@
 - [x] Task 1: Backend scaffold and database schema.
 - [x] Task 2: Authentication, seed admin, and current user API.
 - [x] Task 3: User administration API.
+- [x] Task 4: Snapshot Settings, Scheduler, and Backup Generation.
 
 ## Resume Checklist
 
 - [ ] Confirm worktree is clean: `git status --short --branch`.
 - [ ] Run backend baseline: `mvn -f backend/pom.xml test`.
-- [ ] Resume from Task 4 in the implementation plan; implement coding work directly.
+- [ ] Resume from Task 5 in the implementation plan; implement coding work directly.
 - [ ] For each remaining task, run spec compliance review and code quality review with subagents after direct implementation.
 - [ ] Do not start the next task until both reviews pass and any Important/Critical findings are fixed.
 
 ## Remaining Tasks
-
-- [ ] Task 4: Snapshot Settings, Scheduler, and Backup Generation.
-  - Add snapshot settings persistence and API.
-  - Add manual snapshot generation and cleanup.
-  - Add scheduler guarded by enabled settings.
-  - Verify snapshot tests and full backend suite.
 
 - [ ] Task 5: Teams, Memberships, and Authorization.
   - Add team roles, repositories, controllers, and authorization service.
