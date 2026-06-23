@@ -3,6 +3,7 @@ package com.example.kanban;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,11 +13,13 @@ import org.springframework.test.context.DynamicPropertySource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 @SpringBootTest
 class ApplicationSmokeTest {
@@ -24,6 +27,9 @@ class ApplicationSmokeTest {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    ServerProperties serverProperties;
 
     @DynamicPropertySource
     static void configureDatasource(DynamicPropertyRegistry registry) {
@@ -58,8 +64,18 @@ class ApplicationSmokeTest {
         Integer foreignKeys = jdbcTemplate.queryForObject("pragma foreign_keys", Integer.class);
 
         assertThat(foreignKeys).isEqualTo(1);
-        assertThatThrownBy(insertOrphanTask())
+        Throwable thrown = catchThrowable(insertOrphanTask());
+        assertThat(thrown)
                 .isInstanceOf(DataAccessException.class);
+        assertThat(rootCause(thrown))
+                .isInstanceOf(SQLException.class)
+                .hasMessageContaining("FOREIGN KEY constraint failed");
+    }
+
+    @Test
+    void configuresEffectiveServletSessionTimeout() {
+        assertThat(serverProperties.getServlet().getSession().getTimeout())
+                .isEqualTo(Duration.ofHours(8));
     }
 
     private void assertUniqueIndexExists(String indexName, String tableName) {
@@ -85,6 +101,14 @@ class ApplicationSmokeTest {
                 999999,
                 "orphan task",
                 999999);
+    }
+
+    private Throwable rootCause(Throwable throwable) {
+        Throwable result = throwable;
+        while (result.getCause() != null) {
+            result = result.getCause();
+        }
+        return result;
     }
 
     private static Path createDatabasePath() {

@@ -11,6 +11,9 @@ spring:
     timeout: 8h
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 8h
 kanban:
   seed-admin:
     username: admin
