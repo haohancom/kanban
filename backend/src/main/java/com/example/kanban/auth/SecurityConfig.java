@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.NullSecurityContextRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -39,6 +41,9 @@ public class SecurityConfig {
                 .formLogin().disable()
                 .httpBasic().disable()
                 .logout().disable()
+                .securityContext()
+                .securityContextRepository(new NullSecurityContextRepository())
+                .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
@@ -63,14 +68,24 @@ public class SecurityConfig {
                     HttpServletRequest request,
                     HttpServletResponse response,
                     FilterChain filterChain) throws ServletException, IOException {
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    Long userId = readUserId(request.getSession(false));
-                    if (userId != null) {
-                        userRepository.findById(userId).ifPresent(user ->
-                                SecurityContextHolder.getContext().setAuthentication(authenticationFor(user)));
-                    }
+                SecurityContextHolder.clearContext();
+                HttpSession session = request.getSession(false);
+                removePersistedSecurityContext(session);
+
+                Long userId = readUserId(session);
+                if (userId != null) {
+                    userRepository.findById(userId)
+                            .ifPresent(user -> SecurityContextHolder.getContext().setAuthentication(authenticationFor(user)));
                 }
+
                 filterChain.doFilter(request, response);
+            }
+
+            @Override
+            protected boolean shouldNotFilter(HttpServletRequest request) {
+                String path = requestPath(request);
+                return !path.startsWith("/api/")
+                        || (HttpMethod.POST.matches(request.getMethod()) && "/api/auth/login".equals(path));
             }
 
             private Long readUserId(HttpSession session) {
@@ -82,6 +97,21 @@ public class SecurityConfig {
                     return ((Number) value).longValue();
                 }
                 return null;
+            }
+
+            private void removePersistedSecurityContext(HttpSession session) {
+                if (session != null) {
+                    session.removeAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+                }
+            }
+
+            private String requestPath(HttpServletRequest request) {
+                String path = request.getRequestURI();
+                String contextPath = request.getContextPath();
+                if (contextPath != null && !contextPath.isEmpty() && path.startsWith(contextPath)) {
+                    return path.substring(contextPath.length());
+                }
+                return path;
             }
         };
     }

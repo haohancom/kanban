@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.Optional;
@@ -35,8 +33,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<CurrentUser> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest,
-            HttpServletResponse httpResponse) {
+            HttpServletRequest httpRequest) {
         Optional<UserRepository.UserRecord> foundUser = userRepository.findByUsername(request.getUsername());
         if (!foundUser.isPresent() || !passwordEncoder.matches(request.getPassword(), foundUser.get().getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -50,11 +47,6 @@ public class AuthController {
         UserRepository.UserRecord user = foundUser.get();
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(SESSION_USER_ID, user.getId());
-        Cookie sessionCookie = new Cookie("JSESSIONID", session.getId());
-        sessionCookie.setHttpOnly(true);
-        sessionCookie.setPath(cookiePath(httpRequest));
-        httpResponse.addCookie(sessionCookie);
-        SecurityContextHolder.getContext().setAuthentication(SecurityConfig.authenticationFor(user));
         return ResponseEntity.ok(CurrentUser.from(user));
     }
 
@@ -71,10 +63,5 @@ public class AuthController {
     @GetMapping("/me")
     public CurrentUser me(Authentication authentication) {
         return (CurrentUser) authentication.getPrincipal();
-    }
-
-    private String cookiePath(HttpServletRequest httpRequest) {
-        String contextPath = httpRequest.getContextPath();
-        return contextPath == null || contextPath.isEmpty() ? "/" : contextPath;
     }
 }
