@@ -1,4 +1,5 @@
 export type TeamRole = "TEAM_CREATOR" | "TEAM_ADMIN" | "TEAM_MEMBER";
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
 export interface MembershipSummary {
   teamId: number;
@@ -20,4 +21,55 @@ export interface Team {
   parentId?: number | null;
   role?: TeamRole | null;
   children: Team[];
+}
+
+export interface BoardTask {
+  id: number;
+  teamId?: number;
+  teamName: string;
+  title: string;
+  description?: string;
+  remarks?: string;
+  risks?: string;
+  status: TaskStatus;
+  sprintId?: number | null;
+  sprintName?: string | null;
+  assigneeId?: number | null;
+  assigneeDisplayName?: string | null;
+  createdBy?: number;
+  createdByDisplayName?: string;
+  deletedAt?: string | null;
+}
+
+export interface BoardTaskFilters {
+  subTeamId?: number;
+  memberId?: number;
+  status?: TaskStatus;
+  sprintId?: number;
+}
+
+export interface TaskFormValues {
+  title: string;
+  description: string;
+  remarks: string;
+  risks: string;
+  status: TaskStatus;
+  sprintId: number | null;
+  assigneeId: number | null;
+}
+
+export interface TeamMember {
+  id: number;
+  teamId: number;
+  userId: number;
+  username: string;
+  displayName: string;
+  role: TeamRole;
+}
+
+export interface Sprint {
+  id: number;
+  teamId: number;
+  name: string;
+  active: boolean;
 }

@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 10, App Shell, Team Tree, and Role-Gated Navigation
-- Last completed commit: `f965565 feat: add frontend app shell`
+- Last completed task: Task 11, Board Page, Filters, Columns, and Task Modal
+- Last completed commit: `641ae56 feat: add kanban board ui`
 
 ## Completed
 
@@ -22,6 +22,7 @@
 - [x] Task 8: Recycle Bin API.
 - [x] Task 9: Frontend Scaffold, API Client, and Auth Flow.
 - [x] Task 10: App Shell, Team Tree, and Role-Gated Navigation.
+- [x] Task 11: Board Page, Filters, Columns, and Task Modal.
 
 ## Resume Checklist
 
@@ -59,7 +60,7 @@
   - Add default board page shell.
   - Verify team tree and full frontend tests.
 
-- [ ] Task 11: Board Page, Filters, Columns, and Task Modal.
+- [x] Task 11: Board Page, Filters, Columns, and Task Modal.
   - Add task API, board filters, kanban board, and task modal.
   - Implement status columns, filter query behavior, and task create/edit controls.
   - Verify board UI tests and full frontend tests.

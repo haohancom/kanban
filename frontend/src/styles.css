@@ -18,7 +18,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -222,7 +224,23 @@ form {
   padding: 9px 11px;
 }
 
-.field input:focus {
+.field select,
+.field textarea,
+.status-move select {
+  border: 1px solid #bdc8d5;
+  border-radius: 6px;
+  min-height: 42px;
+  padding: 9px 11px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.status-move select:focus {
   border-color: #2f6f73;
   outline: 3px solid rgba(47, 111, 115, 0.16);
 }
@@ -295,20 +313,183 @@ form {
   margin: 0;
 }
 
-.board-placeholder {
+.board-toolbar {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.board-filters {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+}
+
+.compact-field {
+  gap: 6px;
+}
+
+.kanban-board {
+  display: grid;
+  align-items: start;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kanban-column {
+  background: #f5f7fa;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  min-height: 320px;
+  padding: 14px;
+}
+
+.kanban-column-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.kanban-column-heading h3 {
+  font-size: 0.98rem;
+  margin: 0;
+}
+
+.kanban-column-heading span {
+  background: #e0f2fe;
+  border-radius: 999px;
+  color: #0f3d56;
+  font-size: 0.82rem;
+  font-weight: 700;
+  min-width: 28px;
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.task-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.empty-column,
+.board-loading {
+  color: #52616f;
+  margin: 0;
+}
+
+.task-card {
+  background: #fff;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.task-team {
+  color: #52616f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.task-card h4 {
+  font-size: 1rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.task-meta span {
+  background: #eef4fb;
+  border: 1px solid #d8dee8;
+  border-radius: 999px;
+  color: #394b59;
+  font-size: 0.78rem;
+  padding: 4px 8px;
+}
+
+.task-meta .risk-chip {
+  background: #fef3c7;
+  border-color: #f9d77e;
+  color: #7a4d00;
+}
+
+.task-card-actions {
+  align-items: end;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.secondary-button,
+.icon-text-button {
+  background: #e5eaf1;
+  color: #17202a;
+}
+
+.status-move {
+  display: grid;
+  gap: 5px;
+}
+
+.status-move span {
+  color: #52616f;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.modal-backdrop {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 10;
+}
+
+.task-modal {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  max-height: min(860px, 92vh);
+  overflow: auto;
+  padding: 24px;
+  width: min(100%, 720px);
+}
+
+.modal-heading {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.modal-heading h3 {
+  font-size: 1.15rem;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.modal-grid {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.board-placeholder span {
-  background: #f5f7fa;
-  border: 1px solid #d8dee8;
-  border-radius: 8px;
-  color: #394b59;
-  font-weight: 700;
-  min-height: 96px;
-  padding: 14px;
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 820px) {
@@ -318,6 +499,12 @@ form {
 
   .sidebar {
     min-height: auto;
+  }
+
+  .board-filters,
+  .kanban-board,
+  .modal-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -333,7 +520,15 @@ form {
     width: 100%;
   }
 
-  .board-placeholder {
-    grid-template-columns: 1fr;
+  .board-toolbar,
+  .task-card-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .board-toolbar button,
+  .task-card-actions button,
+  .status-move select {
+    width: 100%;
   }
 }

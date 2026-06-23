@@ -1,0 +1,108 @@
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import BoardPage from "./BoardPage";
+import { Team } from "../types";
+
+const selectedTeam: Team = {
+  id: 1,
+  name: "研发部",
+  children: [{ id: 2, name: "平台组", children: [] }]
+};
+
+const otherTeam: Team = {
+  id: 3,
+  name: "设计部",
+  children: []
+};
+
+describe("BoardPage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("uses the task team metadata when editing a descendant team task", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === "/api/teams/1/board/tasks") {
+        return Response.json([
+          {
+            id: 10,
+            teamId: 2,
+            teamName: "平台组",
+            title: "子团队任务",
+            status: "TODO",
+            sprintId: 22,
+            sprintName: "Child Sprint",
+            assigneeId: 33,
+            assigneeDisplayName: "小王"
+          }
+        ]);
+      }
+
+      if (url === "/api/teams/1/members") {
+        return Response.json([{ id: 11, teamId: 1, userId: 11, displayName: "父团队成员", role: "TEAM_MEMBER" }]);
+      }
+      if (url === "/api/teams/2/members") {
+        return Response.json([{ id: 33, teamId: 2, userId: 33, displayName: "小王", role: "TEAM_MEMBER" }]);
+      }
+      if (url === "/api/teams/1/sprints") {
+        return Response.json([{ id: 21, teamId: 1, name: "Parent Sprint", active: true }]);
+      }
+      if (url === "/api/teams/2/sprints") {
+        return Response.json([{ id: 22, teamId: 2, name: "Child Sprint", active: true }]);
+      }
+
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<BoardPage selectedTeam={selectedTeam} teamsLoading={false} />);
+
+    await screen.findByText("子团队任务");
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/teams/2/members",
+        expect.objectContaining({ credentials: "include" })
+      )
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "编辑" }));
+
+    const dialog = screen.getByRole("dialog", { name: "子团队任务" });
+    expect(within(dialog).getByRole("option", { name: "Child Sprint" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("option", { name: "小王" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("option", { name: "Parent Sprint" })).not.toBeInTheDocument();
+  });
+
+  it("hides previous team tasks immediately when switching teams", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === "/api/teams/1/board/tasks") {
+        return Response.json([{ id: 10, teamId: 1, teamName: "研发部", title: "旧团队任务", status: "TODO" }]);
+      }
+      if (url === "/api/teams/3/board/tasks") {
+        return new Promise<Response>(() => undefined);
+      }
+      if (url.endsWith("/members") || url.endsWith("/sprints")) {
+        return Response.json([]);
+      }
+
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender } = render(<BoardPage selectedTeam={selectedTeam} teamsLoading={false} />);
+
+    await screen.findByText("旧团队任务");
+
+    rerender(<BoardPage selectedTeam={otherTeam} teamsLoading={false} />);
+
+    expect(screen.queryByText("旧团队任务")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("正在加载任务");
+  });
+});
