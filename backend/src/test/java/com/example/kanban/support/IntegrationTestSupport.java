@@ -111,6 +111,19 @@ public abstract class IntegrationTestSupport {
         return fixture;
     }
 
+    protected Fixture createManagedTeam() throws Exception {
+        Fixture fixture = new Fixture();
+        fixture.adminSession = loginAsAdmin();
+        fixture.adminUserId = userRepository.findByUsername("admin").get().getId();
+        fixture.teamId = createTeam("研发部", null, fixture.adminUserId);
+        jdbc.update(
+                "insert into team_memberships (team_id, user_id, role) values (?, ?, ?)",
+                fixture.teamId,
+                fixture.adminUserId,
+                "TEAM_CREATOR");
+        return fixture;
+    }
+
     private long createTeam(String name, Long parentId, long createdBy) {
         org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbc.update(connection -> {
