@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# Java build output
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven / Gradle local state
+.mvn/wrapper/maven-wrapper.jar
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+logs/
+
+# Runtime data and local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files
+.env
+.env.*
+
