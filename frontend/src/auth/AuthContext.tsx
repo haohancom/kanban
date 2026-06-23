@@ -1,19 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { ApiError, apiRequest } from "../api/client";
-
-export interface CurrentUser {
-  id: number;
-  username: string;
-  displayName: string;
-  superAdmin: boolean;
-  memberships?: MembershipSummary[];
-}
-
-export interface MembershipSummary {
-  teamId: number;
-  teamName?: string;
-  role: string;
-}
+import { CurrentUser } from "../types";
 
 interface AuthContextValue {
   user: CurrentUser | null;
