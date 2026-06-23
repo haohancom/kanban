@@ -1,0 +1,85 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import App from "../App";
+
+describe("auth flow", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("logs in and shows the authenticated shell", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        return new Response("null", { status: 401 });
+      }
+      if (url.endsWith("/api/auth/login")) {
+        return Response.json({
+          id: 1,
+          username: "admin",
+          displayName: "超级管理员",
+          superAdmin: true,
+          memberships: []
+        });
+      }
+      if (url.endsWith("/api/teams")) {
+        return Response.json([]);
+      }
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+    await userEvent.type(await screen.findByLabelText("用户名"), "admin");
+    await userEvent.type(screen.getByLabelText("密码"), "admin123");
+    await userEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() => expect(screen.getByText("超级管理员")).toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/me",
+      expect.objectContaining({ credentials: "include" })
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/login",
+      expect.objectContaining({
+        body: JSON.stringify({ username: "admin", password: "admin123" }),
+        credentials: "include",
+        method: "POST"
+      })
+    );
+  });
+
+  it("clears the local user when logout returns unauthorized", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        return Response.json({
+          id: 1,
+          username: "admin",
+          displayName: "超级管理员",
+          superAdmin: true,
+          memberships: []
+        });
+      }
+      if (url.endsWith("/api/auth/logout")) {
+        return new Response("null", { status: 401 });
+      }
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+    await screen.findByText("超级管理员");
+    await userEvent.click(screen.getByRole("button", { name: "退出" }));
+
+    await waitFor(() => expect(screen.getByLabelText("用户名")).toBeInTheDocument());
+    expect(screen.queryByText("超级管理员")).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/logout",
+      expect.objectContaining({ credentials: "include", method: "POST" })
+    );
+  });
+});
