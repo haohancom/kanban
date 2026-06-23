@@ -21,6 +21,7 @@ Backend files live under `backend/`:
 - `backend/src/main/java/com/example/kanban/common/*`: API errors, validation helpers, timestamp helpers.
 - `backend/src/main/java/com/example/kanban/auth/*`: login/logout/me API, security config, current-user model.
 - `backend/src/main/java/com/example/kanban/users/*`: user repository, service, DTOs, API.
+- `backend/src/main/java/com/example/kanban/snapshots/*`: snapshot settings, scheduler, backup generation, cleanup, API.
 - `backend/src/main/java/com/example/kanban/teams/*`: team tree, memberships, authorization rules, API.
 - `backend/src/main/java/com/example/kanban/sprints/*`: sprint repository, service, DTOs, API.
 - `backend/src/main/java/com/example/kanban/tasks/*`: board task repository, service, DTOs, API, recycle bin.
@@ -32,7 +33,7 @@ Frontend files live under `frontend/`:
 - `frontend/src/api/*`: typed fetch client and endpoint modules.
 - `frontend/src/auth/*`: auth context, login state, route guards.
 - `frontend/src/components/*`: reusable shell, form, table, filter, dialog, and status components.
-- `frontend/src/pages/*`: login, board, team administration, sprint management, user administration, recycle bin.
+- `frontend/src/pages/*`: login, board, team administration, sprint management, user administration, snapshot settings, recycle bin.
 - `frontend/src/types.ts`: shared frontend types.
 - `frontend/src/test/*`: test setup and API mocking helpers.
 
@@ -117,8 +118,9 @@ kanban:
 ```
 
 Create `backend/src/main/resources/schema.sql` with idempotent table creation
-for `users`, `teams`, `team_memberships`, `sprints`, and `tasks`. Include unique
-indexes for `users.username` and `(team_id, user_id)` memberships.
+for `users`, `teams`, `team_memberships`, `sprints`, `tasks`, and
+`system_settings`. Include unique indexes for `users.username` and
+`(team_id, user_id)` memberships.
 
 - [ ] **Step 4: Run the test and verify it passes**
 
@@ -317,7 +319,132 @@ git add backend/src/main/java/com/example/kanban/users backend/src/test/java/com
 git commit -m "feat: add user administration api"
 ```
 
-## Task 4: Teams, Memberships, and Authorization
+## Task 4: Snapshot Settings, Scheduler, and Backup Generation
+
+**Files:**
+
+- Create: `backend/src/main/java/com/example/kanban/snapshots/SnapshotSettings.java`
+- Create: `backend/src/main/java/com/example/kanban/snapshots/SnapshotSettingsRepository.java`
+- Create: `backend/src/main/java/com/example/kanban/snapshots/SnapshotService.java`
+- Create: `backend/src/main/java/com/example/kanban/snapshots/SnapshotScheduler.java`
+- Create: `backend/src/main/java/com/example/kanban/snapshots/SnapshotController.java`
+- Create: `backend/src/main/java/com/example/kanban/snapshots/SnapshotDtos.java`
+- Modify: `backend/src/main/java/com/example/kanban/KanbanApplication.java`
+- Create: `backend/src/test/java/com/example/kanban/snapshots/SnapshotControllerTest.java`
+
+- [ ] **Step 1: Write failing snapshot tests**
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+class SnapshotControllerTest extends IntegrationTestSupport {
+    @Autowired MockMvc mvc;
+
+    @TempDir Path tempDir;
+
+    @Test
+    void defaultSnapshotSettingsAreDisabledAndRetainThreeDays() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+
+        mvc.perform(get("/api/admin/snapshot-settings").session(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled").value(false))
+                .andExpect(jsonPath("$.cron").value("0 0 0 * * *"))
+                .andExpect(jsonPath("$.retentionDays").value(3))
+                .andExpect(jsonPath("$.outputPath").value("backup"));
+    }
+
+    @Test
+    void superAdministratorUpdatesSettingsAndRunsSnapshot() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+        String outputPath = tempDir.resolve("custom-backups").toString().replace("\\", "\\\\");
+
+        mvc.perform(patch("/api/admin/snapshot-settings").session(admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":true,\"cron\":\"0 30 1 * * *\",\"retentionDays\":5,\"outputPath\":\"" + outputPath + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled").value(true))
+                .andExpect(jsonPath("$.cron").value("0 30 1 * * *"))
+                .andExpect(jsonPath("$.retentionDays").value(5));
+
+        mvc.perform(post("/api/admin/snapshots/run").session(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fileName").value(containsString("kanban-snapshot-")));
+
+        assertThat(Files.list(tempDir.resolve("custom-backups"))
+                .filter(path -> path.getFileName().toString().endsWith(".sqlite3"))
+                .count()).isEqualTo(1);
+    }
+
+    @Test
+    void snapshotRunDeletesExpiredBackupFiles() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+        Path backupDir = Files.createDirectories(tempDir.resolve("cleanup-backups"));
+        Path oldBackup = backupDir.resolve("kanban-snapshot-old.sqlite3");
+        Files.write(oldBackup, Collections.singletonList("old"));
+        Files.setLastModifiedTime(oldBackup, FileTime.from(Instant.now().minus(4, ChronoUnit.DAYS)));
+        String outputPath = backupDir.toString().replace("\\", "\\\\");
+
+        mvc.perform(patch("/api/admin/snapshot-settings").session(admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":true,\"cron\":\"0 0 0 * * *\",\"retentionDays\":3,\"outputPath\":\"" + outputPath + "\"}"))
+                .andExpect(status().isOk());
+
+        mvc.perform(post("/api/admin/snapshots/run").session(admin))
+                .andExpect(status().isOk());
+
+        assertThat(Files.exists(oldBackup)).isFalse();
+    }
+}
+```
+
+- [ ] **Step 2: Run snapshot tests and verify they fail**
+
+Run: `mvn -f backend/pom.xml test -Dtest=SnapshotControllerTest`
+
+Expected: FAIL with missing snapshot endpoints and services.
+
+- [ ] **Step 3: Implement snapshot settings and backup generation**
+
+Implement:
+
+- `system_settings` keys: `snapshot.enabled`, `snapshot.cron`,
+  `snapshot.retention_days`, and `snapshot.output_path`.
+- Defaults: disabled, `0 0 0 * * *`, retention `3`, output path `backup`.
+- `SnapshotController` endpoints:
+  - `GET /api/admin/snapshot-settings`
+  - `PATCH /api/admin/snapshot-settings`
+  - `POST /api/admin/snapshots/run`
+- Super administrator guard for every snapshot endpoint.
+- `SnapshotService.runSnapshot()` creates the output directory when missing,
+  writes `kanban-snapshot-yyyyMMdd-HHmmss.sqlite3`, and deletes matching
+  `kanban-snapshot-*.sqlite3` files older than the configured retention days.
+- Use SQLite `VACUUM INTO` for snapshot creation when possible. If the database
+  path is not a regular local file in tests, fall back to copying the configured
+  datasource file after flushing open writes.
+- `SnapshotScheduler` reads settings before each scheduled run and does nothing
+  when `snapshot.enabled` is `false`.
+- Add `@EnableScheduling` to `KanbanApplication`.
+
+- [ ] **Step 4: Run snapshot tests and backend suite**
+
+Run:
+
+```bash
+mvn -f backend/pom.xml test -Dtest=SnapshotControllerTest
+mvn -f backend/pom.xml test
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add backend/src/main/java/com/example/kanban/snapshots backend/src/main/java/com/example/kanban/KanbanApplication.java backend/src/test/java/com/example/kanban/snapshots
+git commit -m "feat: add database snapshot service"
+```
+
+## Task 5: Teams, Memberships, and Authorization
 
 **Files:**
 
@@ -415,7 +542,7 @@ git add backend/src/main/java/com/example/kanban/teams backend/src/test/java/com
 git commit -m "feat: add teams and authorization"
 ```
 
-## Task 5: Sprints API
+## Task 6: Sprints API
 
 **Files:**
 
@@ -487,7 +614,7 @@ git add backend/src/main/java/com/example/kanban/sprints backend/src/test/java/c
 git commit -m "feat: add sprint management api"
 ```
 
-## Task 6: Board Tasks, Filters, and Task Editing
+## Task 7: Board Tasks, Filters, and Task Editing
 
 **Files:**
 
@@ -570,7 +697,7 @@ git add backend/src/main/java/com/example/kanban/tasks backend/src/test/java/com
 git commit -m "feat: add board task api"
 ```
 
-## Task 7: Recycle Bin API
+## Task 8: Recycle Bin API
 
 **Files:**
 
@@ -650,7 +777,7 @@ git add backend/src/main/java/com/example/kanban/tasks backend/src/test/java/com
 git commit -m "feat: add task recycle bin"
 ```
 
-## Task 8: Frontend Scaffold, API Client, and Auth Flow
+## Task 9: Frontend Scaffold, API Client, and Auth Flow
 
 **Files:**
 
@@ -728,7 +855,7 @@ git add frontend
 git commit -m "feat: scaffold react frontend"
 ```
 
-## Task 9: App Shell, Team Tree, and Role-Gated Navigation
+## Task 10: App Shell, Team Tree, and Role-Gated Navigation
 
 **Files:**
 
@@ -781,7 +908,7 @@ git add frontend/src
 git commit -m "feat: add frontend app shell"
 ```
 
-## Task 10: Board Page, Filters, Columns, and Task Modal
+## Task 11: Board Page, Filters, Columns, and Task Modal
 
 **Files:**
 
@@ -849,22 +976,53 @@ git add frontend/src
 git commit -m "feat: add kanban board ui"
 ```
 
-## Task 11: Administration Pages and Recycle Bin UI
+## Task 12: Administration Pages, Snapshot Settings, and Recycle Bin UI
 
 **Files:**
 
 - Create: `frontend/src/api/users.ts`
 - Create: `frontend/src/api/sprints.ts`
+- Create: `frontend/src/api/snapshots.ts`
 - Create: `frontend/src/api/recycleBin.ts`
 - Create: `frontend/src/pages/TeamAdminPage.tsx`
 - Create: `frontend/src/pages/SprintPage.tsx`
 - Create: `frontend/src/pages/UserAdminPage.tsx`
+- Create: `frontend/src/pages/SnapshotSettingsPage.tsx`
+- Create: `frontend/src/pages/SnapshotSettingsPage.test.tsx`
 - Create: `frontend/src/pages/RecycleBinPage.tsx`
 - Create: `frontend/src/pages/RecycleBinPage.test.tsx`
 
-- [ ] **Step 1: Write failing recycle-bin UI test**
+- [ ] **Step 1: Write failing administration UI tests**
 
 ```tsx
+describe("SnapshotSettingsPage", () => {
+  it("updates snapshot settings and triggers a manual snapshot", async () => {
+    const api = {
+      getSettings: vi.fn(async () => ({ enabled: false, cron: "0 0 0 * * *", retentionDays: 3, outputPath: "backup" })),
+      updateSettings: vi.fn(async (settings) => settings),
+      runSnapshot: vi.fn(async () => ({ fileName: "kanban-snapshot-20260623-000000.sqlite3" }))
+    };
+
+    render(<SnapshotSettingsPage api={api} />);
+
+    await userEvent.click(await screen.findByRole("checkbox", { name: "启用自动快照" }));
+    await userEvent.clear(screen.getByLabelText("保留天数"));
+    await userEvent.type(screen.getByLabelText("保留天数"), "5");
+    await userEvent.clear(screen.getByLabelText("输出路径"));
+    await userEvent.type(screen.getByLabelText("输出路径"), "/data/backup");
+    await userEvent.click(screen.getByRole("button", { name: "保存设置" }));
+    await userEvent.click(screen.getByRole("button", { name: "立即生成快照" }));
+
+    expect(api.updateSettings).toHaveBeenCalledWith(expect.objectContaining({
+      enabled: true,
+      retentionDays: 5,
+      outputPath: "/data/backup"
+    }));
+    expect(api.runSnapshot).toHaveBeenCalled();
+    expect(await screen.findByText("kanban-snapshot-20260623-000000.sqlite3")).toBeInTheDocument();
+  });
+});
+
 describe("RecycleBinPage", () => {
   it("selects deleted tasks and bulk deletes them", async () => {
     const api = {
@@ -886,9 +1044,9 @@ describe("RecycleBinPage", () => {
 
 - [ ] **Step 2: Run admin UI tests and verify they fail**
 
-Run: `npm --prefix frontend test -- --run RecycleBinPage`
+Run: `npm --prefix frontend test -- --run SnapshotSettingsPage RecycleBinPage`
 
-Expected: FAIL with missing recycle-bin page.
+Expected: FAIL with missing snapshot settings and recycle-bin pages.
 
 - [ ] **Step 3: Implement administration pages**
 
@@ -897,9 +1055,12 @@ Implement:
 - Team administration: create root/sub-team, rename, member list, add/remove member, role select.
 - Sprint management: list, create, rename, activate/deactivate.
 - User administration: create user, reset password, grant/remove super administrator.
+- Snapshot settings: show enabled state, cron expression, retention days, output
+  path, save settings, and trigger a manual snapshot run.
 - Recycle bin: list deleted tasks, restore one, permanently delete one, select multiple, delete selected, delete all.
 
-Use compact tables and dialogs. Hide user administration from non-super-admin users.
+Use compact tables and dialogs. Hide user administration and snapshot settings
+from non-super-admin users.
 
 - [ ] **Step 4: Run frontend tests**
 
@@ -911,10 +1072,10 @@ Expected: PASS.
 
 ```bash
 git add frontend/src
-git commit -m "feat: add admin and recycle bin ui"
+git commit -m "feat: add admin tools and recycle bin ui"
 ```
 
-## Task 12: README, Integration Wiring, and Local Smoke Test
+## Task 13: README, Integration Wiring, and Local Smoke Test
 
 **Files:**
 
@@ -935,6 +1096,9 @@ the app runs:
 5. Open the root board and verify the sub-team task is visible.
 6. Filter by sub-team, member, status, and sprint.
 7. Delete the task, restore it, delete it again, and permanently delete it.
+8. Open snapshot settings as the super administrator, enable snapshots, change
+   retention days and output path, trigger a manual snapshot, and verify the
+   backup file is created in the configured directory.
 ```
 
 Before implementation wiring is complete, this checklist fails at startup or login.
@@ -948,6 +1112,8 @@ with:
 - Frontend prerequisites and startup command.
 - Default seeded super administrator credentials.
 - SQLite database file location.
+- Snapshot defaults: disabled, daily `00:00`, 3-day retention, `backup` directory next to the jar.
+- Super administrator snapshot settings controls.
 - Test commands for backend and frontend.
 
 - [ ] **Step 3: Run full automated verification**

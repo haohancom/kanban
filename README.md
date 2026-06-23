@@ -15,6 +15,7 @@ role-based administration.
 - Filter board tasks by sub-team, member, task status, and sprint.
 - Support custom sprint names.
 - Move deleted tasks into a recycle bin before permanent deletion.
+- Support optional scheduled database snapshots managed by super administrators.
 
 ## Core Concepts
 
@@ -52,6 +53,26 @@ Tasks must support:
 
 Sprints support custom names and can be used as a board filter.
 
+### Database Snapshots
+
+The backend must support scheduled database snapshots. This feature is disabled
+by default.
+
+When enabled, the service exports all data in the SQLite database into snapshot
+files. By default, snapshots run every day at `00:00`, are written to a `backup`
+directory next to the application jar, and are retained for 3 days.
+
+If the backup directory does not exist, the backend must create it before writing
+the snapshot. Each time a snapshot is generated, the backend must delete backup
+files older than the configured retention period.
+
+Super administrators can manage snapshot settings from the administration page:
+
+- Enable or disable scheduled snapshots.
+- Change the scheduled execution time.
+- Change how many days of snapshots are retained.
+- Change the snapshot output path.
+
 ## Recycle Bin
 
 Task deletion is soft deletion by default. Deleted tasks enter the recycle bin.
@@ -64,6 +85,6 @@ The recycle bin supports:
 ## Planned Technical Stack
 
 - Backend: Java 8
+- Frontend: React
 - Database: SQLite
 - Application type: web kanban
-

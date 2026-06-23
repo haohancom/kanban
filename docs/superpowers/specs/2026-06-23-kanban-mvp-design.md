@@ -18,10 +18,15 @@ The MVP must cover the README's core capabilities:
 - Support custom sprint names.
 - Soft-delete tasks into a recycle bin before permanent deletion.
 - Include basic login and role-based permissions.
+- Include an optional scheduled database snapshot feature controlled by super administrators.
 
 The MVP will not include invite emails, avatars, real-time collaboration,
 notifications, comments, file attachments, audit logs, complex reporting, or
 external identity providers.
+
+Snapshot scheduling is included because it protects the SQLite deployment model,
+but restore-from-snapshot is not part of the MVP. Restoring a snapshot remains a
+manual server operation.
 
 ## Recommended Architecture
 
@@ -142,6 +147,19 @@ Status labels shown in the UI should use:
 - 进行中
 - 已完成
 
+### system_settings
+
+- `key`: primary key setting name.
+- `value`: string setting value.
+- `updated_at`: timestamp.
+
+Snapshot settings are stored as system settings:
+
+- `snapshot.enabled`: `true` or `false`; default `false`.
+- `snapshot.cron`: scheduled execution expression; default `0 0 0 * * *`.
+- `snapshot.retention_days`: positive integer; default `3`.
+- `snapshot.output_path`: backup directory path; default `backup` next to the application jar.
+
 ## Backend Modules
 
 ### Authentication
@@ -162,6 +180,23 @@ administrator account on startup when no users exist.
 
 Only super administrators can create users and grant global super administrator
 access in the MVP.
+
+### Snapshot Settings
+
+- `GET /api/admin/snapshot-settings`: returns enabled state, schedule, retention
+  days, output path, and last run metadata.
+- `PATCH /api/admin/snapshot-settings`: updates enabled state, schedule, retention
+  days, and output path.
+- `POST /api/admin/snapshots/run`: starts a snapshot immediately.
+
+Only super administrators can manage snapshot settings or trigger a manual
+snapshot.
+
+The scheduled job is disabled by default. When enabled, it exports all SQLite
+data to a timestamped backup file. By default, the job runs every day at `00:00`,
+writes files into a `backup` directory next to the application jar, creates that
+directory when it does not exist, and deletes backup files older than the
+configured retention period each time a new snapshot is generated.
 
 ### Teams
 
@@ -248,6 +283,15 @@ Deleting teams with tasks or child teams should be blocked in the MVP.
 - Reset passwords.
 - Grant or remove super administrator access.
 
+### System Administration
+
+- Visible to super administrators.
+- Enable or disable scheduled database snapshots.
+- Change the snapshot execution time.
+- Change snapshot retention days.
+- Change snapshot output path.
+- Trigger a manual snapshot run.
+
 ### Recycle Bin
 
 - List soft-deleted tasks.
@@ -286,6 +330,11 @@ Backend tests:
 - Role checks allow and deny expected actions.
 - Task deletion sets `deleted_at` instead of removing rows.
 - Recycle-bin permanent deletion removes rows.
+- Snapshot settings default to disabled, `00:00`, 3 retention days, and a `backup`
+  directory next to the jar.
+- Snapshot generation creates the output directory when missing, exports all
+  database data, and deletes expired backup files.
+- Snapshot settings and manual runs are restricted to super administrators.
 
 Frontend tests:
 
@@ -294,6 +343,8 @@ Frontend tests:
 - Filters produce the expected query parameters.
 - Role-gated controls appear or hide for representative roles.
 - Recycle-bin multi-select actions call the expected API client methods.
+- Snapshot settings controls appear only for super administrators and call the
+  expected API client methods.
 
 Manual verification:
 
@@ -303,6 +354,8 @@ Manual verification:
 - Verify a parent board shows sub-team tasks.
 - Verify filters narrow tasks correctly.
 - Soft-delete a task, restore it, soft-delete again, then permanently delete it.
+- Enable snapshots as the seeded super administrator, change retention and output
+  path, trigger a manual snapshot, and verify a backup file is created.
 
 ## Implementation TODO
 
@@ -316,6 +369,8 @@ Manual verification:
 - [ ] Add authorization service for team-tree permission checks.
 - [ ] Implement auth API.
 - [ ] Implement user administration API.
+- [ ] Implement snapshot settings persistence, scheduler, backup generation, and cleanup.
+- [ ] Implement snapshot settings API restricted to super administrators.
 - [ ] Implement team and team-tree API.
 - [ ] Implement membership API.
 - [ ] Implement sprint API.
@@ -332,6 +387,7 @@ Manual verification:
 - [ ] Implement membership management UI.
 - [ ] Implement sprint management UI.
 - [ ] Implement super administrator user management UI.
+- [ ] Implement super administrator snapshot settings UI.
 - [ ] Implement recycle-bin UI with restore, selected delete, and delete all.
 - [ ] Add frontend tests for auth, board grouping, filters, role-gated controls, and recycle-bin actions.
 - [ ] Add root README instructions for local backend/frontend startup.
@@ -349,4 +405,7 @@ Manual verification:
 - Deleting a task moves it into the recycle bin.
 - Recycle-bin tasks can be restored, individually deleted forever, bulk deleted,
   and deleted all at once.
+- Scheduled database snapshots are disabled by default, can be enabled and
+  configured by super administrators, create backup files in the configured
+  directory, and clean up files older than the configured retention period.
 - Unauthorized users cannot perform restricted actions.
