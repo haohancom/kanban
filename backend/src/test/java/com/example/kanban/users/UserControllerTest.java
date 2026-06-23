@@ -9,6 +9,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +21,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest extends IntegrationTestSupport {
     @Autowired
     MockMvc mvc;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Test
     void superAdministratorCreatesUserAndResetsPassword() throws Exception {
@@ -101,6 +105,19 @@ class UserControllerTest extends IntegrationTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"superAdmin\":false}"))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void demotingSuperAdministratorIsAtomic() {
+        long firstAdminId = userRepository.findByUsername("admin").get().getId();
+        long secondAdminId = userRepository.create(
+                "second-admin",
+                "第二管理员",
+                "unused-password-hash",
+                true);
+
+        assertThat(userRepository.demoteSuperAdministratorIfAnotherExists(firstAdminId)).isEqualTo(1);
+        assertThat(userRepository.demoteSuperAdministratorIfAnotherExists(secondAdminId)).isEqualTo(0);
     }
 
     @Test

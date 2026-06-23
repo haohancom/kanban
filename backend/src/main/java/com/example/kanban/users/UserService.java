@@ -62,8 +62,12 @@ public class UserService {
         }
         String updatedDisplayName = displayName == null ? current.getDisplayName() : displayName;
         boolean updatedSuperAdmin = superAdmin == null ? current.isSuperAdmin() : superAdmin;
-        if (current.isSuperAdmin() && !updatedSuperAdmin && userRepository.countSuperAdministrators() <= 1) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        if (current.isSuperAdmin() && !updatedSuperAdmin) {
+            if (userRepository.demoteSuperAdministratorIfAnotherExists(id) == 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT);
+            }
+            userRepository.update(id, updatedDisplayName, false);
+            return findUserOrThrow(id);
         }
         userRepository.update(id, updatedDisplayName, updatedSuperAdmin);
         return findUserOrThrow(id);
