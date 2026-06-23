@@ -6,31 +6,25 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: `superpowers:subagent-driven-development`
-- Last completed task: Task 2, Authentication, Seed Admin, and Current User API
-- Last completed commit: `becf3f0 fix: harden session authentication`
+- Last completed task: Task 3, User Administration API
+- Last completed commit: `1bc5bca fix: make super admin demotion atomic`
 
 ## Completed
 
 - [x] Set up isolated worktree for implementation.
 - [x] Task 1: Backend scaffold and database schema.
 - [x] Task 2: Authentication, seed admin, and current user API.
+- [x] Task 3: User administration API.
 
 ## Resume Checklist
 
 - [ ] Confirm worktree is clean: `git status --short --branch`.
 - [ ] Run backend baseline: `mvn -f backend/pom.xml test`.
-- [ ] Resume from Task 3 in the implementation plan using Subagent-Driven Development.
+- [ ] Resume from Task 4 in the implementation plan using Subagent-Driven Development.
 - [ ] For each remaining task, dispatch an implementer subagent, then run spec compliance review, then code quality review.
 - [ ] Do not start the next task until both reviews pass and any Important/Critical findings are fixed.
 
 ## Remaining Tasks
-
-- [ ] Task 3: User Administration API.
-  - Create user admin controller and DTOs.
-  - Extend user repository/service.
-  - Add super-admin-only guards.
-  - Add `createPlainMemberSession()` test helper.
-  - Verify `UserControllerTest` and full backend suite.
 
 - [ ] Task 4: Snapshot Settings, Scheduler, and Backup Generation.
   - Add snapshot settings persistence and API.
