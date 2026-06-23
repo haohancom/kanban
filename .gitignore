@@ -25,6 +25,9 @@ out/
 *.log
 logs/
 
+# Git worktrees
+.worktrees/
+
 # Runtime data and local databases
 *.db
 *.sqlite
@@ -33,4 +36,3 @@ logs/
 # Environment files
 .env
 .env.*
-
