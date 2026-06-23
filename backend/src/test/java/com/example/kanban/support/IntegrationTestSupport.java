@@ -148,6 +148,12 @@ public abstract class IntegrationTestSupport {
         return fixture;
     }
 
+    protected Fixture createTaskFixture() throws Exception {
+        Fixture fixture = createManagedTeam();
+        fixture.taskId = createTask(fixture.teamId, "整理回收站接口", fixture.adminUserId);
+        return fixture;
+    }
+
     private long createTeam(String name, Long parentId, long createdBy) {
         org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbc.update(connection -> {
@@ -183,6 +189,24 @@ public abstract class IntegrationTestSupport {
         Number key = keyHolder.getKey();
         if (key == null) {
             throw new IllegalStateException("Could not read generated sprint id");
+        }
+        return key.longValue();
+    }
+
+    private long createTask(long teamId, String title, long createdBy) {
+        org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            java.sql.PreparedStatement statement = connection.prepareStatement(
+                    "insert into tasks (team_id, title, created_by) values (?, ?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement.setLong(1, teamId);
+            statement.setString(2, title);
+            statement.setLong(3, createdBy);
+            return statement;
+        }, keyHolder);
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Could not read generated task id");
         }
         return key.longValue();
     }

@@ -1,6 +1,7 @@
 package com.example.kanban.tasks;
 
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 public final class TaskDtos {
     private TaskDtos() {
@@ -21,6 +22,7 @@ public final class TaskDtos {
         private final String assigneeDisplayName;
         private final long createdBy;
         private final String createdByDisplayName;
+        private final String deletedAt;
 
         public TaskResponse(
                 long id,
@@ -36,7 +38,8 @@ public final class TaskDtos {
                 Long assigneeId,
                 String assigneeDisplayName,
                 long createdBy,
-                String createdByDisplayName) {
+                String createdByDisplayName,
+                String deletedAt) {
             this.id = id;
             this.teamId = teamId;
             this.teamName = teamName;
@@ -51,6 +54,7 @@ public final class TaskDtos {
             this.assigneeDisplayName = assigneeDisplayName;
             this.createdBy = createdBy;
             this.createdByDisplayName = createdByDisplayName;
+            this.deletedAt = deletedAt;
         }
 
         public static TaskResponse from(TaskRepository.TaskRecord task) {
@@ -68,7 +72,8 @@ public final class TaskDtos {
                     task.getAssigneeId(),
                     task.getAssigneeDisplayName(),
                     task.getCreatedBy(),
-                    task.getCreatedByDisplayName());
+                    task.getCreatedByDisplayName(),
+                    task.getDeletedAt());
         }
 
         public long getId() {
@@ -125,6 +130,22 @@ public final class TaskDtos {
 
         public String getCreatedByDisplayName() {
             return createdByDisplayName;
+        }
+
+        public String getDeletedAt() {
+            return deletedAt;
+        }
+    }
+
+    public static class BulkDeleteTasksRequest {
+        private List<Long> taskIds;
+
+        public List<Long> getTaskIds() {
+            return taskIds;
+        }
+
+        public void setTaskIds(List<Long> taskIds) {
+            this.taskIds = taskIds;
         }
     }
 

@@ -108,6 +108,18 @@ public class TaskRepository {
         return jdbc.query(sql.toString(), TaskRepository::mapTask, args.toArray());
     }
 
+    public List<TaskRecord> listDeletedTasks(List<Long> teamIds) {
+        if (teamIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String sql = TASK_SELECT
+                + " where t.deleted_at is not null"
+                + " and t.team_id in (" + placeholders(teamIds.size()) + ")"
+                + " order by t.id";
+        return jdbc.query(sql, TaskRepository::mapTask, teamIds.toArray());
+    }
+
     public void update(
             long id,
             String title,
@@ -131,6 +143,41 @@ public class TaskRepository {
             statement.setLong(8, id);
             return statement;
         });
+    }
+
+    public int softDelete(long id) {
+        return jdbc.update(
+                "update tasks set deleted_at = current_timestamp, updated_at = current_timestamp "
+                        + "where id = ? and deleted_at is null",
+                id);
+    }
+
+    public int restore(long id) {
+        return jdbc.update(
+                "update tasks set deleted_at = null, updated_at = current_timestamp "
+                        + "where id = ? and deleted_at is not null",
+                id);
+    }
+
+    public int permanentlyDelete(long id) {
+        return jdbc.update("delete from tasks where id = ? and deleted_at is not null", id);
+    }
+
+    public int permanentlyDeleteByIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return 0;
+        }
+        String sql = "delete from tasks where deleted_at is not null and id in (" + placeholders(ids.size()) + ")";
+        return jdbc.update(sql, ids.toArray());
+    }
+
+    public int permanentlyDeleteAllInTeamTree(List<Long> teamIds) {
+        if (teamIds.isEmpty()) {
+            return 0;
+        }
+        String sql = "delete from tasks where deleted_at is not null and team_id in ("
+                + placeholders(teamIds.size()) + ")";
+        return jdbc.update(sql, teamIds.toArray());
     }
 
     private static void setNullableLong(PreparedStatement statement, int index, Long value) throws SQLException {
