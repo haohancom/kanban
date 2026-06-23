@@ -73,9 +73,13 @@ public abstract class IntegrationTestSupport {
 
     protected MockHttpSession createPlainMemberSession() throws Exception {
         createPlainMemberUser("member", "普通成员");
+        return loginAsUser("member", "member123");
+    }
+
+    protected MockHttpSession loginAsUser(String username, String password) throws Exception {
         return (MockHttpSession) mvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"member\",\"password\":\"member123\"}"))
+                        .content("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getRequest()
@@ -84,6 +88,49 @@ public abstract class IntegrationTestSupport {
 
     protected long createPlainMemberUser(String username, String displayName) {
         return userRepository.create(username, displayName, passwordEncoder.encode("member123"), false);
+    }
+
+    protected Fixture createTeamWithMember() throws Exception {
+        Fixture fixture = new Fixture();
+        fixture.adminSession = loginAsAdmin();
+        fixture.adminUserId = userRepository.findByUsername("admin").get().getId();
+        fixture.memberUserId = createPlainMemberUser("team-member", "团队成员");
+        fixture.otherUserId = createPlainMemberUser("outsider", "其他成员");
+        fixture.teamId = createTeam("研发部", null, fixture.adminUserId);
+        jdbc.update(
+                "insert into team_memberships (team_id, user_id, role) values (?, ?, ?)",
+                fixture.teamId,
+                fixture.adminUserId,
+                "TEAM_CREATOR");
+        jdbc.update(
+                "insert into team_memberships (team_id, user_id, role) values (?, ?, ?)",
+                fixture.teamId,
+                fixture.memberUserId,
+                "TEAM_MEMBER");
+        fixture.memberSession = loginAsUser("team-member", "member123");
+        return fixture;
+    }
+
+    private long createTeam(String name, Long parentId, long createdBy) {
+        org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        jdbc.update(connection -> {
+            java.sql.PreparedStatement statement = connection.prepareStatement(
+                    "insert into teams (name, parent_id, created_by) values (?, ?, ?)",
+                    java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, name);
+            if (parentId == null) {
+                statement.setNull(2, java.sql.Types.BIGINT);
+            } else {
+                statement.setLong(2, parentId);
+            }
+            statement.setLong(3, createdBy);
+            return statement;
+        }, keyHolder);
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Could not read generated team id");
+        }
+        return key.longValue();
     }
 
     protected String json(String content) {
@@ -108,6 +155,7 @@ public abstract class IntegrationTestSupport {
         public long rootTeamId;
         public long childTeamId;
         public long sprintId;
+        public long adminUserId;
         public long memberUserId;
         public long otherUserId;
         public long taskId;
