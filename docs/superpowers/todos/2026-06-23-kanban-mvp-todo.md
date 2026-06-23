@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 9, Frontend Scaffold, API Client, and Auth Flow
-- Last completed commit: `135108e feat: scaffold react frontend`
+- Last completed task: Task 10, App Shell, Team Tree, and Role-Gated Navigation
+- Last completed commit: `f965565 feat: add frontend app shell`
 
 ## Completed
 
@@ -21,6 +21,7 @@
 - [x] Task 7: Board Tasks, Filters, and Task Editing.
 - [x] Task 8: Recycle Bin API.
 - [x] Task 9: Frontend Scaffold, API Client, and Auth Flow.
+- [x] Task 10: App Shell, Team Tree, and Role-Gated Navigation.
 
 ## Resume Checklist
 
@@ -53,7 +54,7 @@
   - Add typed API client, auth context, app entry, and login page.
   - Verify frontend auth tests.
 
-- [ ] Task 10: App Shell, Team Tree, and Role-Gated Navigation.
+- [x] Task 10: App Shell, Team Tree, and Role-Gated Navigation.
   - Add shared frontend types, team API module, app shell, team tree, and role gate.
   - Add default board page shell.
   - Verify team tree and full frontend tests.
