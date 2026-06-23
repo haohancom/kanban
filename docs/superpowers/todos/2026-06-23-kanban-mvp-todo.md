@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 7, Board Tasks, Filters, and Task Editing
-- Last completed commit: `9df741f feat: add board task api`
+- Last completed task: Task 8, Recycle Bin API
+- Last completed commit: `d7f3e47 feat: add task recycle bin`
 
 ## Completed
 
@@ -19,14 +19,15 @@
 - [x] Task 5: Teams, Memberships, and Authorization.
 - [x] Task 6: Sprints API.
 - [x] Task 7: Board Tasks, Filters, and Task Editing.
+- [x] Task 8: Recycle Bin API.
 
 ## Resume Checklist
 
-- [ ] Confirm worktree is clean: `git status --short --branch`.
-- [ ] Run backend baseline: `mvn -f backend/pom.xml test`.
-- [ ] Resume from Task 8 in the implementation plan; implement coding work directly.
-- [ ] For each remaining task, run spec compliance review and code quality review with subagents after direct implementation.
-- [ ] Do not start the next task until both reviews pass and any Important/Critical findings are fixed.
+- [x] Confirm worktree is clean: `git status --short --branch`.
+- [x] Run backend baseline: `mvn -f backend/pom.xml test`.
+- [x] Resume from Task 8 in the implementation plan; implement coding work directly.
+- [x] For each remaining task, run spec compliance review and code quality review with subagents after direct implementation.
+- [x] Do not start the next task until both reviews pass and any Important/Critical findings are fixed.
 
 ## Remaining Tasks
 
@@ -41,7 +42,7 @@
   - Implement task create/detail/update behavior and member edit rule.
   - Verify board task tests and full backend suite.
 
-- [ ] Task 8: Recycle Bin API.
+- [x] Task 8: Recycle Bin API.
   - Add soft delete, restore, permanent delete, bulk delete, and delete-all behavior.
   - Authorize permanent deletion through team management permission.
   - Verify recycle-bin tests and full backend suite.

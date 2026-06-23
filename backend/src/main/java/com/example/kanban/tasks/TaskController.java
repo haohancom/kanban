@@ -8,6 +8,7 @@ import com.example.kanban.users.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -139,6 +140,18 @@ public class TaskController {
         return TaskDtos.TaskResponse.from(findTaskOrThrow(id));
     }
 
+    @DeleteMapping("/api/tasks/{id}")
+    public void softDelete(Authentication authentication, @PathVariable long id) {
+        CurrentUser currentUser = currentUser(authentication);
+        TaskRepository.TaskRecord task = findTaskOrThrow(id);
+        if (!authorizationService.canManageTeam(currentUser.getId(), task.getTeamId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+        if (taskRepository.softDelete(id) == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
     private boolean canCreateTask(long userId, long teamId) {
         return authorizationService.canManageTeam(userId, teamId)
                 || authorizationService.roleFor(userId, teamId).isPresent();
@@ -182,8 +195,12 @@ public class TaskController {
     }
 
     private TaskRepository.TaskRecord findTaskOrThrow(long taskId) {
-        return taskRepository.findById(taskId)
+        TaskRepository.TaskRecord task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (task.getDeletedAt() != null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return task;
     }
 
     private CurrentUser currentUser(Authentication authentication) {
