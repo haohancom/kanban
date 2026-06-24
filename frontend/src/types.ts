@@ -67,9 +67,33 @@ export interface TeamMember {
   role: TeamRole;
 }
 
+export interface AssignableUser {
+  id: number;
+  username: string;
+  displayName: string;
+}
+
 export interface Sprint {
   id: number;
   teamId: number;
   name: string;
   active: boolean;
+}
+
+export interface UserAccount {
+  id: number;
+  username: string;
+  displayName: string;
+  superAdmin: boolean;
+}
+
+export interface SnapshotSettings {
+  enabled: boolean;
+  cron: string;
+  retentionDays: number;
+  outputPath: string;
+}
+
+export interface SnapshotRunResult {
+  fileName: string;
 }

@@ -3,10 +3,14 @@ import { CurrentUser, Team } from "../types";
 import RoleGate from "./RoleGate";
 import TeamTree from "./TeamTree";
 
+export type WorkspaceView = "board" | "team-admin" | "sprints" | "recycle-bin" | "users" | "snapshots";
+
 interface AppShellProps {
+  activeView: WorkspaceView;
   children: ReactNode;
   onLogout: () => Promise<void>;
   onSelectTeam: (teamId: number) => void;
+  onSelectView: (view: WorkspaceView) => void;
   selectedTeam: Team | null;
   selectedTeamId: number | null;
   teamError: string | null;
@@ -16,9 +20,11 @@ interface AppShellProps {
 }
 
 export default function AppShell({
+  activeView,
   children,
   onLogout,
   onSelectTeam,
+  onSelectView,
   selectedTeam,
   selectedTeamId,
   teamError,
@@ -27,6 +33,7 @@ export default function AppShell({
   user
 }: AppShellProps) {
   const canManageSelectedTeam = canManageTeam(teams, selectedTeamId, user.superAdmin);
+  const canOpenTeamAdmin = user.superAdmin || canManageSelectedTeam;
 
   return (
     <main className="app-shell">
@@ -46,29 +53,34 @@ export default function AppShell({
         </section>
 
         <nav className="workspace-nav" aria-label="工作区导航">
-          <button type="button" className="nav-item active">
+          <NavButton activeView={activeView} view="board" onSelect={onSelectView}>
             看板
-          </button>
+          </NavButton>
+          {canOpenTeamAdmin && (
+            <NavButton activeView={activeView} view="team-admin" onSelect={onSelectView}>
+              团队管理
+            </NavButton>
+          )}
           <RoleGate
             canManageTeam={canManageSelectedTeam}
             user={user}
             team={selectedTeam}
             requirement="team-manager"
           >
-            <button type="button" className="nav-item">
-              团队管理
-            </button>
-            <button type="button" className="nav-item">
+            <NavButton activeView={activeView} view="sprints" onSelect={onSelectView}>
               冲刺管理
-            </button>
-            <button type="button" className="nav-item">
+            </NavButton>
+            <NavButton activeView={activeView} view="recycle-bin" onSelect={onSelectView}>
               回收站
-            </button>
+            </NavButton>
           </RoleGate>
           <RoleGate user={user} requirement="super-admin">
-            <button type="button" className="nav-item">
+            <NavButton activeView={activeView} view="users" onSelect={onSelectView}>
               用户管理
-            </button>
+            </NavButton>
+            <NavButton activeView={activeView} view="snapshots" onSelect={onSelectView}>
+              快照设置
+            </NavButton>
           </RoleGate>
         </nav>
       </aside>
@@ -77,7 +89,7 @@ export default function AppShell({
         <header className="workspace-header">
           <div>
             <p className="workspace-kicker">{selectedTeam?.name || "未选择团队"}</p>
-            <h2>看板</h2>
+            <h2>{viewTitle(activeView)}</h2>
           </div>
           <div className="current-user">
             <span>{user.displayName}</span>
@@ -90,6 +102,47 @@ export default function AppShell({
       </section>
     </main>
   );
+}
+
+function NavButton({
+  activeView,
+  children,
+  onSelect,
+  view
+}: {
+  activeView: WorkspaceView;
+  children: ReactNode;
+  onSelect: (view: WorkspaceView) => void;
+  view: WorkspaceView;
+}) {
+  return (
+    <button
+      type="button"
+      className={activeView === view ? "nav-item active" : "nav-item"}
+      onClick={() => onSelect(view)}
+    >
+      {children}
+    </button>
+  );
+}
+
+function viewTitle(view: WorkspaceView) {
+  if (view === "team-admin") {
+    return "团队管理";
+  }
+  if (view === "sprints") {
+    return "冲刺管理";
+  }
+  if (view === "recycle-bin") {
+    return "回收站";
+  }
+  if (view === "users") {
+    return "用户管理";
+  }
+  if (view === "snapshots") {
+    return "快照设置";
+  }
+  return "看板";
 }
 
 function canManageTeam(teams: Team[], selectedTeamId: number | null, superAdmin: boolean) {

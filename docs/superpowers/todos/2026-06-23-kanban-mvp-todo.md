@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 11, Board Page, Filters, Columns, and Task Modal
-- Last completed commit: `641ae56 feat: add kanban board ui`
+- Last completed task: Task 12, Administration Pages, Snapshot Settings, and Recycle Bin UI
+- Last completed commit: `4ac438a feat: add admin tools and recycle bin ui`
 
 ## Completed
 
@@ -23,6 +23,7 @@
 - [x] Task 9: Frontend Scaffold, API Client, and Auth Flow.
 - [x] Task 10: App Shell, Team Tree, and Role-Gated Navigation.
 - [x] Task 11: Board Page, Filters, Columns, and Task Modal.
+- [x] Task 12: Administration Pages, Snapshot Settings, and Recycle Bin UI.
 
 ## Resume Checklist
 
@@ -65,7 +66,7 @@
   - Implement status columns, filter query behavior, and task create/edit controls.
   - Verify board UI tests and full frontend tests.
 
-- [ ] Task 12: Administration Pages, Snapshot Settings, and Recycle Bin UI.
+- [x] Task 12: Administration Pages, Snapshot Settings, and Recycle Bin UI.
   - Add frontend APIs for users, sprints, snapshots, and recycle bin.
   - Add team, sprint, user admin, snapshot settings, and recycle-bin pages.
   - Verify snapshot settings and recycle-bin UI tests plus full frontend tests.
