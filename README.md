@@ -88,3 +88,81 @@ The recycle bin supports:
 - Frontend: React
 - Database: SQLite
 - Application type: web kanban
+
+## Local Development
+
+### Prerequisites
+
+- Java 8
+- Maven
+- Node.js 20.19 or newer
+
+### Backend
+
+Start the Spring Boot API from the repository root:
+
+```bash
+mvn -f backend/pom.xml spring-boot:run
+```
+
+The backend listens on `http://localhost:8080`. On first startup it creates the
+SQLite database file `kanban.sqlite3` in the current working directory and seeds
+the default super administrator:
+
+- Username: `admin`
+- Password: `admin123`
+
+### Frontend
+
+Install dependencies and start the Vite development server:
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev -- --host 127.0.0.1
+```
+
+Open `http://127.0.0.1:5173`. The Vite server proxies `/api` requests to
+`http://localhost:8080`, so the browser uses the frontend origin while API
+traffic reaches the backend session endpoints. If `5173` is already in use, add
+`--port <port>` to the dev command and open that port instead.
+
+### Database And Snapshots
+
+The local SQLite database is `kanban.sqlite3` relative to the directory where
+the backend process starts. With the Maven command above, that file is
+`backend/kanban.sqlite3`. Local database and snapshot files are ignored by git.
+
+Scheduled snapshots are disabled by default. The default schedule is daily at
+`00:00`, represented by the cron expression `0 0 0 * * *`; snapshots are kept for
+3 days and written to the `backup` directory next to the running application.
+Super administrators can open snapshot settings to enable or disable scheduled
+snapshots, change the cron expression, retention days, and output path, or run a
+snapshot immediately.
+
+## Test Commands
+
+Run the backend suite:
+
+```bash
+mvn -f backend/pom.xml test
+```
+
+Run the frontend tests and production build:
+
+```bash
+npm --prefix frontend test -- --run
+npm --prefix frontend run build
+```
+
+## Local Smoke Checklist
+
+1. Start the backend on `http://localhost:8080`.
+2. Start the frontend on `http://127.0.0.1:5173`.
+3. Log in with `admin` / `admin123`.
+4. Create a user, a root team, a sub-team, one member, one sprint, and one task.
+5. Open the root board and verify the sub-team task is visible.
+6. Filter by sub-team, member, status, and sprint.
+7. Delete the task, restore it, delete it again, and permanently delete it.
+8. Open snapshot settings as the super administrator, enable snapshots, change
+   retention days and output path, trigger a manual snapshot, and verify the
+   backup file is created in the configured directory.

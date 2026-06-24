@@ -29,6 +29,12 @@ export function updateTask(taskId: number, values: TaskPayload) {
   });
 }
 
+export function deleteTask(taskId: number) {
+  return apiRequest<void>(`/api/tasks/${taskId}`, {
+    method: "DELETE"
+  });
+}
+
 export function listTeamMembers(teamId: number) {
   return apiRequest<TeamMember[]>(`/api/teams/${teamId}/members`);
 }

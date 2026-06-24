@@ -2,6 +2,7 @@ import { BoardTask, TaskStatus } from "../types";
 
 interface KanbanBoardProps {
   tasks: BoardTask[];
+  onDelete?: (task: BoardTask) => void;
   onEdit: (task: BoardTask) => void;
   onMove?: (task: BoardTask, status: TaskStatus) => void;
 }
@@ -12,7 +13,7 @@ const columns: Array<{ status: TaskStatus; label: string }> = [
   { status: "DONE", label: "已完成" }
 ];
 
-export default function KanbanBoard({ tasks, onEdit, onMove }: KanbanBoardProps) {
+export default function KanbanBoard({ tasks, onDelete, onEdit, onMove }: KanbanBoardProps) {
   return (
     <div className="kanban-board">
       {columns.map((column) => {
@@ -47,6 +48,16 @@ export default function KanbanBoard({ tasks, onEdit, onMove }: KanbanBoardProps)
                       <button type="button" className="secondary-button" onClick={() => onEdit(task)}>
                         编辑
                       </button>
+                      {onDelete && (
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          aria-label={`删除 ${task.title}`}
+                          onClick={() => onDelete(task)}
+                        >
+                          删除
+                        </button>
+                      )}
                       {onMove && (
                         <label className="status-move">
                           <span>移动</span>
