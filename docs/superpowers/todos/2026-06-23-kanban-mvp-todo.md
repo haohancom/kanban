@@ -6,7 +6,7 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 13, README, Integration Wiring, and Local Smoke Test
+- Last completed task: Final Verification
 - Last completed commit: `4a75404 docs: add local development instructions`
 
 ## Completed
@@ -76,7 +76,7 @@
   - Update README with backend/frontend startup, default credentials, SQLite data, snapshot defaults, and test commands.
   - Run backend tests, frontend install/tests/build, start local servers, and execute the manual smoke checklist.
 
-- [ ] Final Verification.
+- [x] Final Verification.
   - Run `mvn -f backend/pom.xml test`.
   - Run `npm --prefix frontend test -- --run`.
   - Run `npm --prefix frontend run build`.

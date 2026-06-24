@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .securityContextRepository(new NullSecurityContextRepository())
                 .and()
                 .sessionManagement()
+                .sessionFixation().none()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .exceptionHandling()
