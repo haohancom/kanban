@@ -9,19 +9,22 @@ describe("auth flow", () => {
   });
 
   it("logs in and shows the authenticated shell", async () => {
+    let meCalls = 0;
+    const currentUser = {
+      id: 1,
+      username: "admin",
+      displayName: "超级管理员",
+      superAdmin: true,
+      memberships: []
+    };
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.endsWith("/api/auth/me")) {
-        return new Response("null", { status: 401 });
+        meCalls += 1;
+        return meCalls === 1 ? new Response("null", { status: 401 }) : Response.json(currentUser);
       }
       if (url.endsWith("/api/auth/login")) {
-        return Response.json({
-          id: 1,
-          username: "admin",
-          displayName: "超级管理员",
-          superAdmin: true,
-          memberships: []
-        });
+        return Response.json(currentUser);
       }
       if (url.endsWith("/api/teams")) {
         return Response.json([]);
@@ -52,6 +55,52 @@ describe("auth flow", () => {
         method: "POST"
       })
     );
+  });
+
+  it("confirms the session before loading the workspace after login", async () => {
+    const calls: string[] = [];
+    let meCalls = 0;
+    const currentUser = {
+      id: 1,
+      username: "admin",
+      displayName: "超级管理员",
+      superAdmin: true,
+      memberships: []
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+
+      if (url.endsWith("/api/auth/me")) {
+        meCalls += 1;
+        return meCalls === 1 ? new Response("null", { status: 401 }) : Response.json(currentUser);
+      }
+      if (url.endsWith("/api/auth/login")) {
+        return Response.json(currentUser);
+      }
+      if (url.endsWith("/api/teams")) {
+        return Response.json([]);
+      }
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+    await userEvent.type(await screen.findByLabelText("用户名"), "admin");
+    await userEvent.type(screen.getByLabelText("密码"), "admin123");
+    await userEvent.click(screen.getByRole("button", { name: "登录" }));
+
+    await waitFor(() => expect(screen.getByText("超级管理员")).toBeInTheDocument());
+
+    const loginIndex = calls.findIndex((url) => url.endsWith("/api/auth/login"));
+    const postLoginMeIndex = calls.findIndex(
+      (url, index) => index > loginIndex && url.endsWith("/api/auth/me")
+    );
+    const teamsIndex = calls.findIndex((url) => url.endsWith("/api/teams"));
+
+    expect(postLoginMeIndex).toBeGreaterThan(loginIndex);
+    expect(postLoginMeIndex).toBeLessThan(teamsIndex);
   });
 
   it("clears the local user when logout returns unauthorized", async () => {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "../api/client";
 import {
   createTask,
+  deleteTask,
   listBoardTasks,
   listTeamMembers,
   listTeamSprints,
@@ -24,11 +25,12 @@ interface TeamMetadata {
 }
 
 interface BoardPageProps {
+  canManageSelectedTeam: boolean;
   selectedTeam: Team | null;
   teamsLoading: boolean;
 }
 
-export default function BoardPage({ selectedTeam, teamsLoading }: BoardPageProps) {
+export default function BoardPage({ canManageSelectedTeam, selectedTeam, teamsLoading }: BoardPageProps) {
   const [tasks, setTasks] = useState<BoardTask[]>([]);
   const [tasksTeamId, setTasksTeamId] = useState<number | null>(null);
   const [filters, setFilters] = useState<BoardTaskFilters>({});
@@ -209,6 +211,16 @@ export default function BoardPage({ selectedTeam, teamsLoading }: BoardPageProps
     }
   }
 
+  async function removeTask(task: BoardTask) {
+    setBoardError(null);
+    try {
+      await deleteTask(task.id);
+      setReloadKey((current) => current + 1);
+    } catch (cause: unknown) {
+      setBoardError(errorMessage(cause, "任务删除失败"));
+    }
+  }
+
   function openCreateModal() {
     setEditingTask(null);
     setModalError(null);
@@ -249,7 +261,12 @@ export default function BoardPage({ selectedTeam, teamsLoading }: BoardPageProps
         </p>
       )}
 
-      <KanbanBoard tasks={visibleTasks} onEdit={openEditModal} onMove={moveTask} />
+      <KanbanBoard
+        tasks={visibleTasks}
+        onDelete={canManageSelectedTeam ? removeTask : undefined}
+        onEdit={openEditModal}
+        onMove={moveTask}
+      />
 
       {modalOpen && (
         <TaskModal

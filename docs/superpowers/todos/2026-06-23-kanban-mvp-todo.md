@@ -6,8 +6,8 @@
 - Worktree: `/Users/aaron/kanban/.worktrees/kanban-mvp`
 - Implementation plan: `docs/superpowers/plans/2026-06-23-kanban-mvp-implementation.md`
 - Required execution method: implement directly; use subagents only for spec compliance and code quality review.
-- Last completed task: Task 12, Administration Pages, Snapshot Settings, and Recycle Bin UI
-- Last completed commit: `4ac438a feat: add admin tools and recycle bin ui`
+- Last completed task: Task 13, README, Integration Wiring, and Local Smoke Test
+- Last completed commit: `4a75404 docs: add local development instructions`
 
 ## Completed
 
@@ -71,7 +71,7 @@
   - Add team, sprint, user admin, snapshot settings, and recycle-bin pages.
   - Verify snapshot settings and recycle-bin UI tests plus full frontend tests.
 
-- [ ] Task 13: README, Integration Wiring, and Local Smoke Test.
+- [x] Task 13: README, Integration Wiring, and Local Smoke Test.
   - Configure Vite `/api` proxy.
   - Update README with backend/frontend startup, default credentials, SQLite data, snapshot defaults, and test commands.
   - Run backend tests, frontend install/tests/build, start local servers, and execute the manual smoke checklist.
@@ -79,7 +79,7 @@
 - [ ] Final Verification.
   - Run `mvn -f backend/pom.xml test`.
   - Run `npm --prefix frontend test -- --run`.
-  - Run `npm --prefix frontend build`.
+  - Run `npm --prefix frontend run build`.
   - Start backend and frontend.
   - Manually verify the MVP acceptance path in the browser.
   - Run `git status --short` and confirm only intentional files are changed.

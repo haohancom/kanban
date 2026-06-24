@@ -91,6 +91,16 @@ class AuthControllerTest {
     }
 
     @Test
+    void unauthenticatedApiRequestDoesNotCreateSession() throws Exception {
+        MvcResult result = mvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(cookie().doesNotExist("JSESSIONID"))
+                .andReturn();
+
+        assertThat(result.getRequest().getSession(false)).isNull();
+    }
+
+    @Test
     void logoutInvalidatesSession() throws Exception {
         MockHttpSession session = loginAsAdmin();
 

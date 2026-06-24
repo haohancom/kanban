@@ -38,6 +38,7 @@ public class SecurityConfig {
             HttpSecurity http,
             OncePerRequestFilter sessionAuthenticationFilter) throws Exception {
         http.csrf().disable()
+                .requestCache().disable()
                 .formLogin().disable()
                 .httpBasic().disable()
                 .logout().disable()

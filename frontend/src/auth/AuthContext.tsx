@@ -51,11 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(username: string, password: string) {
     setError(null);
-    const currentUser = await apiRequest<CurrentUser>("/api/auth/login", {
+    await apiRequest<CurrentUser>("/api/auth/login", {
       method: "POST",
       body: { username, password }
     });
-    setUser(currentUser);
+    const confirmedUser = await apiRequest<CurrentUser>("/api/auth/me");
+    setUser(confirmedUser);
   }
 
   async function logout() {

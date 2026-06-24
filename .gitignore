@@ -34,6 +34,7 @@ logs/
 .worktrees/
 
 # Runtime data and local databases
+backup/
 *.db
 *.sqlite
 *.sqlite3

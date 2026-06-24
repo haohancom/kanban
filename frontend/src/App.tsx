@@ -136,7 +136,13 @@ function renderWorkspace(
   if (view === "snapshots") {
     return <SnapshotSettingsPage />;
   }
-  return <BoardPage selectedTeam={context.selectedTeam} teamsLoading={context.teamsLoading} />;
+  return (
+    <BoardPage
+      canManageSelectedTeam={context.canManageSelectedTeam}
+      selectedTeam={context.selectedTeam}
+      teamsLoading={context.teamsLoading}
+    />
+  );
 }
 
 function resolveView(view: WorkspaceView, superAdmin: boolean, canManageSelectedTeam: boolean) {

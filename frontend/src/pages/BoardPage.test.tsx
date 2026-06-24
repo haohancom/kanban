@@ -59,7 +59,7 @@ describe("BoardPage", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<BoardPage selectedTeam={selectedTeam} teamsLoading={false} />);
+    render(<BoardPage canManageSelectedTeam={true} selectedTeam={selectedTeam} teamsLoading={false} />);
 
     await screen.findByText("子团队任务");
     await waitFor(() =>
@@ -96,13 +96,74 @@ describe("BoardPage", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    const { rerender } = render(<BoardPage selectedTeam={selectedTeam} teamsLoading={false} />);
+    const { rerender } = render(
+      <BoardPage canManageSelectedTeam={true} selectedTeam={selectedTeam} teamsLoading={false} />
+    );
 
     await screen.findByText("旧团队任务");
 
-    rerender(<BoardPage selectedTeam={otherTeam} teamsLoading={false} />);
+    rerender(<BoardPage canManageSelectedTeam={true} selectedTeam={otherTeam} teamsLoading={false} />);
 
     expect(screen.queryByText("旧团队任务")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("正在加载任务");
+  });
+
+  it("soft deletes a task from the board and reloads the list", async () => {
+    let tasks = [{ id: 10, teamId: 1, teamName: "研发部", title: "待删除任务", status: "TODO" }];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url === "/api/teams/1/board/tasks") {
+        return Response.json(tasks);
+      }
+      if (url === "/api/tasks/10" && init?.method === "DELETE") {
+        tasks = [];
+        return new Response(null, { status: 204 });
+      }
+      if (url.endsWith("/members") || url.endsWith("/sprints")) {
+        return Response.json([]);
+      }
+
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<BoardPage canManageSelectedTeam={true} selectedTeam={selectedTeam} teamsLoading={false} />);
+
+    await screen.findByText("待删除任务");
+
+    await userEvent.click(screen.getByRole("button", { name: "删除 待删除任务" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/tasks/10",
+        expect.objectContaining({ credentials: "include", method: "DELETE" })
+      )
+    );
+    await waitFor(() => expect(screen.queryByText("待删除任务")).not.toBeInTheDocument());
+  });
+
+  it("hides task deletion controls from users who cannot manage the selected team", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === "/api/teams/1/board/tasks") {
+        return Response.json([{ id: 10, teamId: 1, teamName: "研发部", title: "成员可见任务", status: "TODO" }]);
+      }
+      if (url.endsWith("/members") || url.endsWith("/sprints")) {
+        return Response.json([]);
+      }
+
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<BoardPage canManageSelectedTeam={false} selectedTeam={selectedTeam} teamsLoading={false} />);
+
+    await screen.findByText("成员可见任务");
+
+    expect(screen.queryByRole("button", { name: "删除 成员可见任务" })).not.toBeInTheDocument();
   });
 });
