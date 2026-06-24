@@ -103,6 +103,30 @@ public final class TeamDtos {
         }
     }
 
+    public static class AssignableUserResponse {
+        private final long id;
+        private final String username;
+        private final String displayName;
+
+        public AssignableUserResponse(long id, String username, String displayName) {
+            this.id = id;
+            this.username = username;
+            this.displayName = displayName;
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
     public static class CreateTeamRequest {
         @NotBlank
         private String name;

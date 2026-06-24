@@ -37,6 +37,9 @@ describe("auth flow", () => {
     await userEvent.click(screen.getByRole("button", { name: "登录" }));
 
     await waitFor(() => expect(screen.getByText("超级管理员")).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: "团队管理" }));
+
+    expect(screen.getByLabelText("根团队名称")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/auth/me",
       expect.objectContaining({ credentials: "include" })

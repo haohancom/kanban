@@ -251,6 +251,12 @@ form {
   margin: 0;
 }
 
+.form-success {
+  color: #166534;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
 .workspace-header {
   align-items: center;
   background: #fff;
@@ -320,10 +326,134 @@ form {
   justify-content: space-between;
 }
 
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .board-filters {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(4, minmax(140px, 1fr));
+}
+
+.admin-page {
+  align-content: start;
+}
+
+.admin-form,
+.admin-inline-form,
+.admin-grid-form {
+  border-top: 1px solid #d8dee8;
+  padding-top: 18px;
+}
+
+.admin-inline-form {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+}
+
+.admin-grid-form {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) minmax(140px, auto) auto;
+}
+
+.checkbox-field {
+  align-items: center;
+  color: #394b59;
+  display: flex;
+  gap: 9px;
+  font-weight: 700;
+  min-height: 42px;
+}
+
+.checkbox-field input {
+  height: 18px;
+  width: 18px;
+}
+
+.form-checkbox {
+  align-self: end;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result-panel {
+  background: #eef7f1;
+  border: 1px solid #b7dfc2;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.result-panel span {
+  color: #3f5f46;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  border-collapse: collapse;
+  min-width: 720px;
+  width: 100%;
+}
+
+.admin-table th,
+.admin-table td {
+  border-bottom: 1px solid #d8dee8;
+  padding: 11px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-table th {
+  color: #394b59;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.admin-table input,
+.admin-table select {
+  border: 1px solid #bdc8d5;
+  border-radius: 6px;
+  min-height: 38px;
+  padding: 7px 9px;
+  width: 100%;
+}
+
+.table-primary {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.inline-empty {
+  margin: 0;
 }
 
 .compact-field {
@@ -503,6 +633,8 @@ form {
 
   .board-filters,
   .kanban-board,
+  .admin-grid-form,
+  .admin-inline-form,
   .modal-grid {
     grid-template-columns: 1fr;
   }
@@ -521,12 +653,14 @@ form {
   }
 
   .board-toolbar,
+  .toolbar-actions,
   .task-card-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
   .board-toolbar button,
+  .toolbar-actions button,
   .task-card-actions button,
   .status-move select {
     width: 100%;

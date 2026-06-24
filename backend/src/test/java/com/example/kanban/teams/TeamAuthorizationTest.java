@@ -97,6 +97,21 @@ class TeamAuthorizationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void teamAdministratorListsAssignableUsersForManagedTeam() throws Exception {
+        Fixture fixture = createTeamWithMember();
+        long memberMembershipId = membershipIdFor(fixture.teamId, fixture.memberUserId);
+        jdbc.update(
+                "update team_memberships set role = 'TEAM_ADMIN' where id = ?",
+                memberMembershipId);
+
+        mvc.perform(get("/api/teams/" + fixture.teamId + "/members/assignable-users").session(fixture.memberSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.username == 'outsider')].id").value((int) fixture.otherUserId))
+                .andExpect(jsonPath("$[?(@.username == 'outsider')].displayName").value("其他成员"))
+                .andExpect(jsonPath("$[?(@.username == 'outsider')].passwordHash").doesNotExist());
+    }
+
+    @Test
     void memberCannotManageMemberships() throws Exception {
         Fixture fixture = createTeamWithMember();
 

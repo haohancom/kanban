@@ -51,6 +51,21 @@ public class MembershipController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/assignable-users")
+    public List<TeamDtos.AssignableUserResponse> listAssignableUsers(
+            Authentication authentication,
+            @PathVariable long teamId) {
+        CurrentUser currentUser = currentUser(authentication);
+        findTeamOrThrow(teamId);
+        requireCanManageMembers(currentUser.getId(), teamId);
+        return userRepository.listUsers().stream()
+                .map(user -> new TeamDtos.AssignableUserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getDisplayName()))
+                .collect(Collectors.toList());
+    }
+
     @PostMapping
     public TeamDtos.MembershipResponse create(
             Authentication authentication,
