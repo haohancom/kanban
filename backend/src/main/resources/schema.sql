@@ -4,6 +4,9 @@ create table if not exists users (
     display_name text not null,
     password_hash text not null,
     super_admin integer not null default 0,
+    avatar_data blob,
+    avatar_content_type text,
+    avatar_updated_at text,
     created_at text not null default current_timestamp,
     updated_at text not null default current_timestamp,
     check (super_admin in (0, 1))

@@ -15,16 +15,19 @@ type ApiRequestOptions = Omit<RequestInit, "body" | "credentials"> & {
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const headers = new Headers(options.headers);
   const hasBody = options.body !== undefined;
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
-  if (hasBody && !headers.has("Content-Type")) {
+  if (hasBody && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+
+  const body = hasBody ? (isFormData ? (options.body as BodyInit) : JSON.stringify(options.body)) : undefined;
 
   const response = await fetch(path, {
     ...options,
     headers,
     credentials: "include",
-    body: hasBody ? JSON.stringify(options.body) : undefined
+    body
   });
 
   if (!response.ok) {

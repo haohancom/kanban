@@ -11,12 +11,18 @@ public final class UserDtos {
         private final String username;
         private final String displayName;
         private final boolean superAdmin;
+        private final String avatarUrl;
 
         public UserResponse(long id, String username, String displayName, boolean superAdmin) {
+            this(id, username, displayName, superAdmin, null);
+        }
+
+        public UserResponse(long id, String username, String displayName, boolean superAdmin, String avatarUrl) {
             this.id = id;
             this.username = username;
             this.displayName = displayName;
             this.superAdmin = superAdmin;
+            this.avatarUrl = avatarUrl;
         }
 
         public static UserResponse from(UserRepository.UserRecord user) {
@@ -37,6 +43,10 @@ public final class UserDtos {
 
         public boolean isSuperAdmin() {
             return superAdmin;
+        }
+
+        public String getAvatarUrl() {
+            return avatarUrl;
         }
     }
 

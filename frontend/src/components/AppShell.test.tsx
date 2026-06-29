@@ -97,4 +97,91 @@ describe("AppShell", () => {
     expect(screen.queryByRole("button", { name: "冲刺管理" })).not.toBeInTheDocument();
     expect(selectView).toHaveBeenCalledWith("team-admin");
   });
+
+  it("shows the default avatar in the workspace header", () => {
+    const teams: Team[] = [{ id: 1, name: "研发部", role: "TEAM_CREATOR", children: [] }];
+
+    render(
+      <AppShell
+        onLogout={vi.fn()}
+        onSelectTeam={vi.fn()}
+        onSelectView={vi.fn()}
+        activeView="board"
+        selectedTeam={teams[0]}
+        selectedTeamId={1}
+        teamError={null}
+        teams={teams}
+        teamsLoading={false}
+        user={{ ...user, displayName: "管理员", avatarUrl: null }}
+      >
+        <div>看板内容</div>
+      </AppShell>
+    );
+
+    expect(screen.getByLabelText("管理员 的默认头像")).toHaveTextContent("员");
+  });
+
+  it("uploads and removes the current user's avatar", async () => {
+    const actor = userEvent.setup();
+    const teams: Team[] = [{ id: 1, name: "研发部", role: "TEAM_CREATOR", children: [] }];
+    const uploadAvatar = vi.fn(async () => undefined);
+    const deleteAvatar = vi.fn(async () => undefined);
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+
+    render(
+      <AppShell
+        onLogout={vi.fn()}
+        onSelectTeam={vi.fn()}
+        onSelectView={vi.fn()}
+        activeView="board"
+        selectedTeam={teams[0]}
+        selectedTeamId={1}
+        teamError={null}
+        teams={teams}
+        teamsLoading={false}
+        user={{ ...user, displayName: "管理员", avatarUrl: "/api/users/me/avatar?v=1" }}
+        onUploadAvatar={uploadAvatar}
+        onDeleteAvatar={deleteAvatar}
+      >
+        <div>看板内容</div>
+      </AppShell>
+    );
+
+    await actor.upload(screen.getByLabelText("上传头像"), file);
+    await actor.click(screen.getByRole("button", { name: "移除头像" }));
+
+    expect(uploadAvatar).toHaveBeenCalledWith(file);
+    expect(deleteAvatar).toHaveBeenCalled();
+  });
+
+  it("shows an inline avatar upload error", async () => {
+    const actor = userEvent.setup();
+    const teams: Team[] = [{ id: 1, name: "研发部", role: "TEAM_CREATOR", children: [] }];
+    const uploadAvatar = vi.fn(async () => {
+      throw new Error("bad avatar");
+    });
+    const file = new File(["avatar"], "avatar.png", { type: "image/png" });
+
+    render(
+      <AppShell
+        onLogout={vi.fn()}
+        onSelectTeam={vi.fn()}
+        onSelectView={vi.fn()}
+        activeView="board"
+        selectedTeam={teams[0]}
+        selectedTeamId={1}
+        teamError={null}
+        teams={teams}
+        teamsLoading={false}
+        user={{ ...user, displayName: "管理员", avatarUrl: null }}
+        onUploadAvatar={uploadAvatar}
+      >
+        <div>看板内容</div>
+      </AppShell>
+    );
+
+    await actor.upload(screen.getByLabelText("上传头像"), file);
+
+    expect(await screen.findByText("头像上传失败")).toBeInTheDocument();
+  });
 });

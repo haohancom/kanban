@@ -12,6 +12,7 @@ export interface CurrentUser {
   username: string;
   displayName: string;
   superAdmin: boolean;
+  avatarUrl?: string | null;
   memberships?: MembershipSummary[];
 }
 
@@ -85,6 +86,7 @@ export interface UserAccount {
   username: string;
   displayName: string;
   superAdmin: boolean;
+  avatarUrl?: string | null;
 }
 
 export interface SnapshotSettings {
