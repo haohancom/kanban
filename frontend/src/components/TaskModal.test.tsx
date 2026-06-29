@@ -96,6 +96,72 @@ describe("TaskModal", () => {
     expect(screen.queryByRole("button", { name: "删除" })).not.toBeInTheDocument();
   });
 
+  it("does not show edit-task mode label in create mode", () => {
+    render(
+      <TaskModal
+        task={null}
+        members={[]}
+        sprints={[]}
+        submitting={false}
+        deleting={false}
+        error={null}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText("编辑任务")).not.toBeInTheDocument();
+    expect(screen.getByText("新建任务")).toBeInTheDocument();
+  });
+
+  it("does not show edit-task label in edit mode", () => {
+    render(
+      <TaskModal
+        task={{
+          id: 10,
+          teamId: 1,
+          teamName: "平台组",
+          title: "待删任务",
+          status: "TODO"
+        }}
+        members={[]}
+        sprints={[]}
+        submitting={false}
+        deleting={false}
+        error={null}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText("编辑任务")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "待删任务" })).toBeInTheDocument();
+  });
+
+  it("uses icon button labeled X for closing modal", async () => {
+    const onClose = vi.fn();
+
+    render(
+      <TaskModal
+        task={null}
+        members={[]}
+        sprints={[]}
+        submitting={false}
+        deleting={false}
+        error={null}
+        onClose={onClose}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    const closeButton = screen.getByRole("button", { name: "关闭" });
+
+    expect(closeButton).toHaveClass("icon-text-button", "modal-close-button");
+    expect(closeButton).toHaveTextContent("X");
+    await userEvent.click(closeButton);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps keyboard focus stable across parent rerenders", async () => {
     const firstOnClose = vi.fn();
 

@@ -120,11 +120,11 @@ export default function TaskModal({
         <form onSubmit={handleSubmit}>
           <div className="modal-heading">
             <div>
-              <p className="workspace-kicker">{task ? "编辑任务" : "新建任务"}</p>
+              {!task && <p className="workspace-kicker">新建任务</p>}
               <h3 id="task-modal-title">{task ? task.title : "任务"}</h3>
             </div>
-            <button type="button" className="icon-text-button" onClick={onClose}>
-              关闭
+            <button type="button" className="icon-text-button modal-close-button" onClick={onClose} aria-label="关闭">
+              X
             </button>
           </div>
 
