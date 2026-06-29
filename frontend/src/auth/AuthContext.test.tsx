@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
+import { AuthProvider, useAuth } from "./AuthContext";
 
 describe("auth flow", () => {
   afterEach(() => {
@@ -134,4 +135,49 @@ describe("auth flow", () => {
       expect.objectContaining({ credentials: "include", method: "POST" })
     );
   });
+
+  it("refreshes the current user on demand", async () => {
+    let meCalls = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/api/auth/me")) {
+        meCalls += 1;
+        return Response.json({
+          id: 1,
+          username: "admin",
+          displayName: meCalls === 1 ? "旧名称" : "新名称",
+          superAdmin: true,
+          memberships: []
+        });
+      }
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <AuthProvider>
+        <RefreshHarness />
+      </AuthProvider>
+    );
+
+    expect(await screen.findByText("旧名称")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "刷新用户" }));
+
+    await waitFor(() => expect(screen.getByText("新名称")).toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });
+
+function RefreshHarness() {
+  const { refreshUser, user } = useAuth();
+
+  return (
+    <div>
+      <span>{user?.displayName ?? "未登录"}</span>
+      <button type="button" onClick={() => void refreshUser()}>
+        刷新用户
+      </button>
+    </div>
+  );
+}

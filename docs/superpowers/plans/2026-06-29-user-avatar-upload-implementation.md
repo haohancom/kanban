@@ -327,7 +327,7 @@ git commit -m "feat: add current user avatar api"
 - Modify: `frontend/src/auth/AuthContext.tsx`
 - Modify: `frontend/src/auth/AuthContext.test.tsx`
 
-- [ ] **Step 1: Write failing avatar component and auth tests**
+- [x] **Step 1: Write failing avatar component and auth tests**
 
 Create `UserAvatar.test.tsx`:
 
@@ -350,7 +350,7 @@ it("renders an uploaded avatar image when avatarUrl exists", () => {
 
 Add an `AuthContext` test that calls `refreshUser` and expects `/api/auth/me` to reload user state.
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -360,7 +360,7 @@ npm --prefix frontend test -- --run frontend/src/components/UserAvatar.test.tsx 
 
 Expected: FAIL because `UserAvatar`, `avatarUrl`, and `refreshUser` do not exist.
 
-- [ ] **Step 3: Implement minimal frontend primitives**
+- [x] **Step 3: Implement minimal frontend primitives**
 
 Add `avatarUrl?: string | null` to `CurrentUser` and `UserAccount`.
 
@@ -403,7 +403,7 @@ refreshUser: () => Promise<CurrentUser>;
 setCurrentUser: (user: CurrentUser) => void;
 ```
 
-- [ ] **Step 4: Run tests to verify green**
+- [x] **Step 4: Run tests to verify green**
 
 Run:
 
@@ -413,7 +413,7 @@ npm --prefix frontend test -- --run frontend/src/components/UserAvatar.test.tsx 
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/types.ts frontend/src/api/client.ts frontend/src/api/profile.ts frontend/src/components/UserAvatar.tsx frontend/src/components/UserAvatar.test.tsx frontend/src/auth/AuthContext.tsx frontend/src/auth/AuthContext.test.tsx

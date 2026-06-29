@@ -8,6 +8,8 @@ interface AuthContextValue {
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<CurrentUser>;
+  setCurrentUser: (user: CurrentUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -55,8 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: "POST",
       body: { username, password }
     });
-    const confirmedUser = await apiRequest<CurrentUser>("/api/auth/me");
-    setUser(confirmedUser);
+    await refreshUser();
   }
 
   async function logout() {
@@ -72,8 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function refreshUser() {
+    const currentUser = await apiRequest<CurrentUser>("/api/auth/me");
+    setUser(currentUser);
+    return currentUser;
+  }
+
+  function setCurrentUser(currentUser: CurrentUser) {
+    setUser(currentUser);
+  }
+
   const value = useMemo(
-    () => ({ user, loading, error, login, logout }),
+    () => ({ user, loading, error, login, logout, refreshUser, setCurrentUser }),
     [user, loading, error]
   );
 
