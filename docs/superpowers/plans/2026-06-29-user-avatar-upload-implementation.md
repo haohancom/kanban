@@ -542,7 +542,7 @@ git commit -m "feat: add avatar upload controls"
 **Files:**
 - Review all changed files.
 
-- [ ] **Step 1: Run full verification**
+- [x] **Step 1: Run full verification**
 
 Run:
 
@@ -560,7 +560,7 @@ Expected:
 - Frontend production build passes.
 - Git status is clean after commits.
 
-- [ ] **Step 2: Summarize result**
+- [x] **Step 2: Summarize result**
 
 Report the branch, commits, verification commands, and any known residual risks.
 
