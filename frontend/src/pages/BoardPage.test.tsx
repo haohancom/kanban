@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import BoardPage from "./BoardPage";
@@ -59,7 +59,14 @@ describe("BoardPage", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<BoardPage canManageSelectedTeam={true} selectedTeam={selectedTeam} teamsLoading={false} />);
+    render(
+      <BoardPage
+        canManageSelectedTeam={true}
+        currentUserId={99}
+        selectedTeam={selectedTeam}
+        teamsLoading={false}
+      />
+    );
 
     await screen.findByText("子团队任务");
     await waitFor(() =>
@@ -97,12 +104,24 @@ describe("BoardPage", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const { rerender } = render(
-      <BoardPage canManageSelectedTeam={true} selectedTeam={selectedTeam} teamsLoading={false} />
+      <BoardPage
+        canManageSelectedTeam={true}
+        currentUserId={99}
+        selectedTeam={selectedTeam}
+        teamsLoading={false}
+      />
     );
 
     await screen.findByText("旧团队任务");
 
-    rerender(<BoardPage canManageSelectedTeam={true} selectedTeam={otherTeam} teamsLoading={false} />);
+    rerender(
+      <BoardPage
+        canManageSelectedTeam={true}
+        currentUserId={99}
+        selectedTeam={otherTeam}
+        teamsLoading={false}
+      />
+    );
 
     expect(screen.queryByText("旧团队任务")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("正在加载任务");
@@ -129,7 +148,14 @@ describe("BoardPage", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<BoardPage canManageSelectedTeam={true} selectedTeam={selectedTeam} teamsLoading={false} />);
+    render(
+      <BoardPage
+        canManageSelectedTeam={true}
+        currentUserId={99}
+        selectedTeam={selectedTeam}
+        teamsLoading={false}
+      />
+    );
 
     await screen.findByText("待删除任务");
 
@@ -160,10 +186,83 @@ describe("BoardPage", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<BoardPage canManageSelectedTeam={false} selectedTeam={selectedTeam} teamsLoading={false} />);
+    render(
+      <BoardPage
+        canManageSelectedTeam={false}
+        currentUserId={99}
+        selectedTeam={selectedTeam}
+        teamsLoading={false}
+      />
+    );
 
     await screen.findByText("成员可见任务");
 
     expect(screen.queryByRole("button", { name: "删除 成员可见任务" })).not.toBeInTheDocument();
   });
+
+  it("updates a member's own task status by dragging it into another column", async () => {
+    let tasks = [
+      {
+        id: 10,
+        teamId: 1,
+        teamName: "研发部",
+        title: "我的任务",
+        status: "TODO",
+        assigneeId: 99
+      }
+    ];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url === "/api/teams/1/board/tasks") {
+        return Response.json(tasks);
+      }
+      if (url === "/api/tasks/10" && init?.method === "PATCH") {
+        tasks = [{ ...tasks[0], status: "IN_PROGRESS" }];
+        return Response.json(tasks[0]);
+      }
+      if (url.endsWith("/members") || url.endsWith("/sprints")) {
+        return Response.json([]);
+      }
+
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <BoardPage
+        canManageSelectedTeam={false}
+        currentUserId={99}
+        selectedTeam={selectedTeam}
+        teamsLoading={false}
+      />
+    );
+
+    const card = (await screen.findByText("我的任务")).closest("article") as HTMLElement;
+    const dataTransfer = createDataTransfer();
+    fireEvent.dragStart(card, { dataTransfer });
+    fireEvent.dragOver(screen.getByLabelText("进行中"), { dataTransfer });
+    fireEvent.drop(screen.getByLabelText("进行中"), { dataTransfer });
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/tasks/10",
+        expect.objectContaining({
+          body: JSON.stringify({ status: "IN_PROGRESS" }),
+          credentials: "include",
+          method: "PATCH"
+        })
+      )
+    );
+  });
 });
+
+function createDataTransfer() {
+  const data = new Map<string, string>();
+  return {
+    clearData: vi.fn(() => data.clear()),
+    getData: vi.fn((format: string) => data.get(format) ?? ""),
+    setData: vi.fn((format: string, value: string) => data.set(format, value))
+  };
+}

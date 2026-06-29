@@ -26,11 +26,17 @@ interface TeamMetadata {
 
 interface BoardPageProps {
   canManageSelectedTeam: boolean;
+  currentUserId: number;
   selectedTeam: Team | null;
   teamsLoading: boolean;
 }
 
-export default function BoardPage({ canManageSelectedTeam, selectedTeam, teamsLoading }: BoardPageProps) {
+export default function BoardPage({
+  canManageSelectedTeam,
+  currentUserId,
+  selectedTeam,
+  teamsLoading
+}: BoardPageProps) {
   const [tasks, setTasks] = useState<BoardTask[]>([]);
   const [tasksTeamId, setTasksTeamId] = useState<number | null>(null);
   const [filters, setFilters] = useState<BoardTaskFilters>({});
@@ -221,6 +227,10 @@ export default function BoardPage({ canManageSelectedTeam, selectedTeam, teamsLo
     }
   }
 
+  function canMoveTask(task: BoardTask) {
+    return canManageSelectedTeam || task.assigneeId === currentUserId;
+  }
+
   function openCreateModal() {
     setEditingTask(null);
     setModalError(null);
@@ -263,6 +273,7 @@ export default function BoardPage({ canManageSelectedTeam, selectedTeam, teamsLo
 
       <KanbanBoard
         tasks={visibleTasks}
+        canMoveTask={canMoveTask}
         onDelete={canManageSelectedTeam ? removeTask : undefined}
         onEdit={openEditModal}
         onMove={moveTask}

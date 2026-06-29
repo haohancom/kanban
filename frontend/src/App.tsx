@@ -139,6 +139,7 @@ function renderWorkspace(
   return (
     <BoardPage
       canManageSelectedTeam={context.canManageSelectedTeam}
+      currentUserId={context.currentUserId}
       selectedTeam={context.selectedTeam}
       teamsLoading={context.teamsLoading}
     />
