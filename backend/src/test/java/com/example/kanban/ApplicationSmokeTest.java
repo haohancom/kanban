@@ -57,6 +57,11 @@ class ApplicationSmokeTest {
         assertUniqueIndexExists("idx_team_memberships_team_user", "team_memberships");
         assertIndexColumns("idx_users_username", "username");
         assertIndexColumns("idx_team_memberships_team_user", "team_id", "user_id");
+
+        List<String> userColumns = jdbcTemplate.queryForList(
+                "select name from pragma_table_info('users')",
+                String.class);
+        assertThat(userColumns).contains("avatar_data", "avatar_content_type", "avatar_updated_at");
     }
 
     @Test

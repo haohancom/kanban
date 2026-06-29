@@ -85,6 +85,19 @@ class AuthControllerTest {
     }
 
     @Test
+    void meReturnsAvatarUrlWhenCurrentUserHasAvatar() throws Exception {
+        MockHttpSession session = loginAsAdmin();
+        jdbc.update(
+                "update users set avatar_data = ?, avatar_content_type = ?, avatar_updated_at = '2026-06-29 15:00:00' where username = 'admin'",
+                new byte[] {1, 2, 3},
+                "image/png");
+
+        mvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").value("/api/users/me/avatar?v=20260629150000"));
+    }
+
+    @Test
     void meWithoutSessionReturnsUnauthorized() throws Exception {
         mvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized());

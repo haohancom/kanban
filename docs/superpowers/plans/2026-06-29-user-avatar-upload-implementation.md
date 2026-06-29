@@ -43,7 +43,7 @@
 - Modify: `backend/src/test/java/com/example/kanban/ApplicationSmokeTest.java`
 - Modify: `backend/src/test/java/com/example/kanban/auth/AuthControllerTest.java`
 
-- [ ] **Step 1: Write failing schema and metadata tests**
+- [x] **Step 1: Write failing schema and metadata tests**
 
 Add schema assertions in `ApplicationSmokeTest`:
 
@@ -77,7 +77,7 @@ void meReturnsAvatarUrlWhenCurrentUserHasAvatar() throws Exception {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -87,7 +87,7 @@ mvn -f backend/pom.xml -Dtest=ApplicationSmokeTest,AuthControllerTest test
 
 Expected: FAIL because `avatar_data`, `avatar_content_type`, and `avatar_updated_at` do not exist, and `avatarUrl` is not serialized.
 
-- [ ] **Step 3: Implement minimal schema and metadata support**
+- [x] **Step 3: Implement minimal schema and metadata support**
 
 Add columns to `schema.sql`:
 
@@ -149,7 +149,7 @@ private static String avatarUrl(UserRepository.UserRecord user) {
 
 Add nullable `avatarUrl` to `UserDtos.UserResponse`, returning `null` for now.
 
-- [ ] **Step 4: Run tests to verify green**
+- [x] **Step 4: Run tests to verify green**
 
 Run:
 
@@ -159,7 +159,7 @@ mvn -f backend/pom.xml -Dtest=ApplicationSmokeTest,AuthControllerTest test
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/resources/schema.sql backend/src/main/java/com/example/kanban/users/UserRepository.java backend/src/main/java/com/example/kanban/users/UserDtos.java backend/src/main/java/com/example/kanban/auth/CurrentUser.java backend/src/test/java/com/example/kanban/ApplicationSmokeTest.java backend/src/test/java/com/example/kanban/auth/AuthControllerTest.java
