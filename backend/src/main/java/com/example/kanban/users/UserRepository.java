@@ -89,6 +89,33 @@ public class UserRepository {
                 id);
     }
 
+    public void updateAvatar(long id, byte[] data, String contentType) {
+        jdbc.update(
+                "update users set avatar_data = ?, avatar_content_type = ?, "
+                        + "avatar_updated_at = current_timestamp, updated_at = current_timestamp where id = ?",
+                data,
+                contentType,
+                id);
+    }
+
+    public Optional<AvatarRecord> findAvatarById(long id) {
+        List<AvatarRecord> avatars = jdbc.query(
+                "select avatar_data, avatar_content_type from users "
+                        + "where id = ? and avatar_data is not null and avatar_content_type is not null",
+                (resultSet, rowNumber) -> new AvatarRecord(
+                        resultSet.getBytes("avatar_data"),
+                        resultSet.getString("avatar_content_type")),
+                id);
+        return avatars.stream().findFirst();
+    }
+
+    public void removeAvatar(long id) {
+        jdbc.update(
+                "update users set avatar_data = null, avatar_content_type = null, "
+                        + "avatar_updated_at = null, updated_at = current_timestamp where id = ?",
+                id);
+    }
+
     public int countUsers() {
         Integer count = jdbc.queryForObject("select count(*) from users", Integer.class);
         return count == null ? 0 : count;
@@ -191,6 +218,24 @@ public class UserRepository {
 
         public boolean hasAvatar() {
             return avatarContentType != null && avatarUpdatedAt != null;
+        }
+    }
+
+    public static class AvatarRecord {
+        private final byte[] data;
+        private final String contentType;
+
+        public AvatarRecord(byte[] data, String contentType) {
+            this.data = data;
+            this.contentType = contentType;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+
+        public String getContentType() {
+            return contentType;
         }
     }
 }

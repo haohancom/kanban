@@ -176,7 +176,7 @@ git commit -m "feat: add avatar metadata to users"
 - Modify: `backend/src/main/java/com/example/kanban/users/UserController.java`
 - Modify: `backend/src/test/java/com/example/kanban/users/UserControllerTest.java`
 
-- [ ] **Step 1: Write failing endpoint tests**
+- [x] **Step 1: Write failing endpoint tests**
 
 Add tests in `UserControllerTest`:
 
@@ -231,7 +231,7 @@ void currentUserUploadsFetchesReplacesAndDeletesAvatar() throws Exception {
 
 Also add invalid upload tests for empty file, unsupported type, oversized file, and unauthenticated upload.
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -241,7 +241,7 @@ mvn -f backend/pom.xml -Dtest=UserControllerTest test
 
 Expected: FAIL with 404 or 405 for `/api/users/me/avatar`.
 
-- [ ] **Step 3: Implement minimal endpoint support**
+- [x] **Step 3: Implement minimal endpoint support**
 
 Add `AvatarRecord`, `updateAvatar`, `removeAvatar`, and `findAvatarById` to `UserRepository`.
 
@@ -287,7 +287,7 @@ public ResponseEntity<byte[]> avatar(Authentication authentication) { ... }
 public CurrentUser deleteAvatar(Authentication authentication) { ... }
 ```
 
-- [ ] **Step 4: Run tests to verify green**
+- [x] **Step 4: Run tests to verify green**
 
 Run:
 
@@ -297,7 +297,7 @@ mvn -f backend/pom.xml -Dtest=UserControllerTest test
 
 Expected: PASS.
 
-- [ ] **Step 5: Run backend suite**
+- [x] **Step 5: Run backend suite**
 
 Run:
 
@@ -307,7 +307,7 @@ mvn -f backend/pom.xml test
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/com/example/kanban/users/UserRepository.java backend/src/main/java/com/example/kanban/users/UserService.java backend/src/main/java/com/example/kanban/users/UserController.java backend/src/test/java/com/example/kanban/users/UserControllerTest.java
@@ -571,4 +571,3 @@ Report the branch, commits, verification commands, and any known residual risks.
 - Spec coverage: The plan covers SQLite binary storage, current-user-only upload, default blue last-character avatar, upload replacement, deletion, validation, cache-busted avatar URL, startup migration, backend tests, and frontend tests.
 - Placeholder scan: No unresolved placeholders are present.
 - Type consistency: Backend uses `avatarUrl`, `avatarContentType`, and `avatarUpdatedAt`; frontend uses `avatarUrl` consistently on `CurrentUser` and `UserAccount`.
-

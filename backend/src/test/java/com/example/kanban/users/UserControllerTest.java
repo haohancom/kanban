@@ -5,14 +5,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -118,6 +124,99 @@ class UserControllerTest extends IntegrationTestSupport {
 
         assertThat(userRepository.demoteSuperAdministratorIfAnotherExists(firstAdminId)).isEqualTo(1);
         assertThat(userRepository.demoteSuperAdministratorIfAnotherExists(secondAdminId)).isEqualTo(0);
+    }
+
+    @Test
+    void currentUserUploadsFetchesReplacesAndDeletesAvatar() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+        byte[] firstAvatar = new byte[] {1, 2, 3};
+        byte[] secondAvatar = new byte[] {4, 5};
+
+        mvc.perform(multipart("/api/users/me/avatar")
+                        .file(new MockMultipartFile("file", "avatar.png", "image/png", firstAvatar))
+                        .session(admin)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").value(startsWith("/api/users/me/avatar?v=")));
+
+        mvc.perform(get("/api/users/me/avatar").session(admin))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"))
+                .andExpect(content().bytes(firstAvatar));
+
+        mvc.perform(multipart("/api/users/me/avatar")
+                        .file(new MockMultipartFile("file", "avatar.jpg", "image/jpeg", secondAvatar))
+                        .session(admin)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").value(startsWith("/api/users/me/avatar?v=")));
+
+        mvc.perform(get("/api/users/me/avatar").session(admin))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/jpeg"))
+                .andExpect(content().bytes(secondAvatar));
+
+        mvc.perform(delete("/api/users/me/avatar").session(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").doesNotExist());
+
+        mvc.perform(get("/api/users/me/avatar").session(admin))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void avatarUploadRejectsInvalidFiles() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+
+        mvc.perform(multipart("/api/users/me/avatar")
+                        .file(new MockMultipartFile("file", "empty.png", "image/png", new byte[0]))
+                        .session(admin)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(multipart("/api/users/me/avatar")
+                        .file(new MockMultipartFile("file", "avatar.txt", "text/plain", new byte[] {1}))
+                        .session(admin)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(multipart("/api/users/me/avatar")
+                        .file(new MockMultipartFile("file", "large.png", "image/png", new byte[2 * 1024 * 1024 + 1]))
+                        .session(admin)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void avatarEndpointsRequireAuthentication() throws Exception {
+        mvc.perform(multipart("/api/users/me/avatar")
+                        .file(new MockMultipartFile("file", "avatar.png", "image/png", new byte[] {1}))
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isUnauthorized());
+
+        mvc.perform(get("/api/users/me/avatar"))
+                .andExpect(status().isUnauthorized());
+
+        mvc.perform(delete("/api/users/me/avatar"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
