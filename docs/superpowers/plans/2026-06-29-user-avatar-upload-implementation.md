@@ -430,7 +430,7 @@ git commit -m "feat: add avatar frontend primitives"
 - Modify: `frontend/src/App.tsx`
 - Modify: `frontend/src/styles.css`
 
-- [ ] **Step 1: Write failing header tests**
+- [x] **Step 1: Write failing header tests**
 
 Extend `AppShell.test.tsx`:
 
@@ -476,7 +476,7 @@ it("shows an inline avatar upload error", async () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -486,7 +486,7 @@ npm --prefix frontend test -- --run frontend/src/components/AppShell.test.tsx
 
 Expected: FAIL because header avatar controls do not exist.
 
-- [ ] **Step 3: Implement minimal header UI**
+- [x] **Step 3: Implement minimal header UI**
 
 Add props to `AppShell`:
 
@@ -507,7 +507,7 @@ Add CSS for:
 .avatar-actions { display: flex; align-items: center; gap: 8px; }
 ```
 
-- [ ] **Step 4: Run tests to verify green**
+- [x] **Step 4: Run tests to verify green**
 
 Run:
 
@@ -517,7 +517,7 @@ npm --prefix frontend test -- --run frontend/src/components/AppShell.test.tsx
 
 Expected: PASS.
 
-- [ ] **Step 5: Run frontend suite and build**
+- [x] **Step 5: Run frontend suite and build**
 
 Run:
 
@@ -528,7 +528,7 @@ npm --prefix frontend run build
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/components/AppShell.tsx frontend/src/components/AppShell.test.tsx frontend/src/App.tsx frontend/src/styles.css

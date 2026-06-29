@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { deleteCurrentUserAvatar, uploadCurrentUserAvatar } from "./api/profile";
 import { listTeams } from "./api/teams";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import AppShell, { WorkspaceView } from "./components/AppShell";
@@ -12,7 +13,7 @@ import UserAdminPage from "./pages/UserAdminPage";
 import { Team } from "./types";
 
 function AppContent() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, setCurrentUser } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [teamError, setTeamError] = useState<string | null>(null);
@@ -88,9 +89,15 @@ function AppContent() {
   return (
     <AppShell
       activeView={visibleView}
+      onDeleteAvatar={async () => {
+        setCurrentUser(await deleteCurrentUserAvatar());
+      }}
       onLogout={logout}
       onSelectTeam={setSelectedTeamId}
       onSelectView={setActiveView}
+      onUploadAvatar={async (file) => {
+        setCurrentUser(await uploadCurrentUserAvatar(file));
+      }}
       selectedTeam={selectedTeam}
       selectedTeamId={selectedTeamId}
       teamError={teamError}

@@ -278,12 +278,83 @@ form {
   gap: 12px;
 }
 
-.current-user span {
+.current-user-name {
   font-weight: 700;
 }
 
 .current-user button {
   background: #374151;
+}
+
+.current-user-details {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.avatar-circle {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 1rem;
+  font-weight: 800;
+  height: 40px;
+  justify-content: center;
+  overflow: hidden;
+  width: 40px;
+}
+
+.avatar-default {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.avatar-image {
+  object-fit: cover;
+}
+
+.avatar-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.avatar-upload-button {
+  align-items: center;
+  background: #14532d;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 700;
+  min-height: 36px;
+  padding: 0 12px;
+  position: relative;
+}
+
+.avatar-upload-button.disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.avatar-upload-button input {
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
+.avatar-remove-button {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.avatar-error {
+  color: #b42318;
+  font-size: 0.78rem;
+  margin: 0;
 }
 
 .workspace-empty {
