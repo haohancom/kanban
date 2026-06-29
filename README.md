@@ -126,6 +126,101 @@ Open `http://127.0.0.1:5173`. The Vite server proxies `/api` requests to
 traffic reaches the backend session endpoints. If `5173` is already in use, add
 `--port <port>` to the dev command and open that port instead.
 
+### Static Build + Executable JAR
+
+The project can be built into a single executable Spring Boot JAR by compiling
+the frontend into static assets and packaging them into `backend/target` with
+`mvn clean package`.
+
+```bash
+mvn -f backend/pom.xml -DskipTests clean package
+```
+
+After packaging, run the JAR directly:
+
+```bash
+java -jar backend/target/kanban-0.0.1-SNAPSHOT.jar
+```
+
+Because frontend assets are placed under `static`, opening `http://localhost:8080`
+will load both API and UI from the same process.
+
+### Windows One-Click Start / Stop
+
+Double-click or run these scripts from the repository root:
+
+```bash
+scripts\start-kanban.bat
+scripts\stop-kanban.bat
+```
+
+`start-kanban.bat` will:
+
+1. run `mvn -f backend/pom.xml -DskipTests clean package`
+   (this triggers frontend install/build and injects static assets into the JAR),
+2. start `backend/target/kanban-0.0.1-SNAPSHOT.jar` in background and save PID.
+
+`stop-kanban.bat` stops the process recorded by PID (and falls back to matching
+`kanban-*.jar` Java processes).
+
+### Linux One-Command Start / Stop
+
+On Linux, this repository provides JDK-only start/stop scripts for the packaged JAR:
+
+```bash
+chmod +x scripts/start-kanban-jar.sh scripts/stop-kanban-jar.sh
+./scripts/start-kanban-jar.sh backend/target/kanban-0.0.1-SNAPSHOT.jar 0.0.0.0
+
+# stop
+./scripts/stop-kanban-jar.sh backend/target/kanban-0.0.1-SNAPSHOT.jar
+```
+
+These scripts start/stop only the JAR process and redirect logs to:
+`backend/target/logs/kanban-runtime.log` and `backend/target/logs/kanban-runtime-error.log`.
+
+### Server Deployment (JDK-only runtime)
+
+If the server has only JDK (no npm, no Node), deploy this way:
+
+1. On a machine with Node + JDK, run:
+
+```bash
+mvn -f backend/pom.xml -DskipTests clean package
+```
+
+2. Copy only the JAR (and optionally `application.yml` if you use custom DB path) to the server:
+
+```bash
+backend/target/kanban-0.0.1-SNAPSHOT.jar
+```
+
+3. Start the JAR on the server with:
+
+```bash
+./scripts/start-kanban-jar.sh backend/target/kanban-0.0.1-SNAPSHOT.jar 0.0.0.0
+```
+
+Or directly:
+
+```bash
+java -jar backend/target/kanban-0.0.1-SNAPSHOT.jar
+```
+
+The app serves both API and frontend from the same process, so external users can
+open `http://<server_ip>:8080`.
+
+Stop on the server with:
+
+```bash
+./scripts/stop-kanban-jar.sh backend/target/kanban-0.0.1-SNAPSHOT.jar
+```
+
+Notes for external access:
+
+1. Ensure port `8080` is open in the server firewall/security group.
+2. Use the server's public IP, e.g. `http://203.0.113.10:8080`.
+3. For production, consider running with a reverse proxy (Nginx/Caddy) on port 80/443.
+
 ### Database And Snapshots
 
 The local SQLite database is `kanban.sqlite3` relative to the directory where

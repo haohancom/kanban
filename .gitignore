@@ -42,3 +42,5 @@ backup/
 # Environment files
 .env
 .env.*
+
+frontend/node/
