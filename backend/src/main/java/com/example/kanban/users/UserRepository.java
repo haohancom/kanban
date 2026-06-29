@@ -92,7 +92,9 @@ public class UserRepository {
     public void updateAvatar(long id, byte[] data, String contentType) {
         jdbc.update(
                 "update users set avatar_data = ?, avatar_content_type = ?, "
-                        + "avatar_updated_at = current_timestamp, updated_at = current_timestamp where id = ?",
+                        + "avatar_updated_at = strftime('%Y-%m-%d %H:%M:%f', 'now') "
+                        + "|| '-' || printf('%06d', abs(random()) % 1000000), "
+                        + "updated_at = current_timestamp where id = ?",
                 data,
                 contentType,
                 id);

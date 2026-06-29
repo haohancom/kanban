@@ -132,7 +132,7 @@ class UserControllerTest extends IntegrationTestSupport {
         byte[] firstAvatar = new byte[] {1, 2, 3};
         byte[] secondAvatar = new byte[] {4, 5};
 
-        mvc.perform(multipart("/api/users/me/avatar")
+        String firstUpload = mvc.perform(multipart("/api/users/me/avatar")
                         .file(new MockMultipartFile("file", "avatar.png", "image/png", firstAvatar))
                         .session(admin)
                         .with(request -> {
@@ -140,14 +140,16 @@ class UserControllerTest extends IntegrationTestSupport {
                             return request;
                         }))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.avatarUrl").value(startsWith("/api/users/me/avatar?v=")));
+                .andExpect(jsonPath("$.avatarUrl").value(startsWith("/api/users/me/avatar?v=")))
+                .andReturn().getResponse().getContentAsString();
+        String firstAvatarUrl = objectMapper.readTree(firstUpload).path("avatarUrl").asText();
 
         mvc.perform(get("/api/users/me/avatar").session(admin))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "image/png"))
                 .andExpect(content().bytes(firstAvatar));
 
-        mvc.perform(multipart("/api/users/me/avatar")
+        String secondUpload = mvc.perform(multipart("/api/users/me/avatar")
                         .file(new MockMultipartFile("file", "avatar.jpg", "image/jpeg", secondAvatar))
                         .session(admin)
                         .with(request -> {
@@ -155,7 +157,9 @@ class UserControllerTest extends IntegrationTestSupport {
                             return request;
                         }))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.avatarUrl").value(startsWith("/api/users/me/avatar?v=")));
+                .andExpect(jsonPath("$.avatarUrl").value(startsWith("/api/users/me/avatar?v=")))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(objectMapper.readTree(secondUpload).path("avatarUrl").asText()).isNotEqualTo(firstAvatarUrl);
 
         mvc.perform(get("/api/users/me/avatar").session(admin))
                 .andExpect(status().isOk())
