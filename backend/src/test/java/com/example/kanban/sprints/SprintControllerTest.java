@@ -128,6 +128,35 @@ class SprintControllerTest extends IntegrationTestSupport {
     }
 
     @Test
+    void superAdministratorCanUpdateSprintWithUnknownTeamContext() throws Exception {
+        Fixture fixture = createTeamTreeWithSprintAndAssignees();
+        long parentSprintId = createSprint(fixture.rootTeamId, "父团队 Sprint", true);
+
+        mvc.perform(patch("/api/sprints/" + parentSprintId)
+                        .session(fixture.adminSession)
+                        .param("teamId", "999999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"更新时忽略无效上下文\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("更新时忽略无效上下文"));
+    }
+
+    @Test
+    void superAdministratorCanDeleteSprintWithUnknownTeamContext() throws Exception {
+        Fixture fixture = createTeamTreeWithSprintAndAssignees();
+        long parentSprintId = createSprint(fixture.rootTeamId, "待删 Sprint", true);
+
+        mvc.perform(delete("/api/sprints/" + parentSprintId)
+                        .session(fixture.adminSession)
+                        .param("teamId", "999999"))
+                .andExpect(status().isNoContent());
+
+        assertThat(
+                jdbc.queryForObject("select count(*) from sprints where id = ?", Integer.class, parentSprintId))
+                .isEqualTo(0);
+    }
+
+    @Test
     void normalTeamAdminCannotUpdateSprintFromDifferentTeamContext() throws Exception {
         Fixture fixture = createTeamTreeWithSprintAndAssignees();
         long normalAdminUserId = createPlainMemberUser("team-admin", "团队管理员");
