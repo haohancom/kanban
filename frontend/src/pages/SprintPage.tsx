@@ -6,7 +6,8 @@ import { Sprint } from "../types";
 export interface SprintPageApi {
   listSprints: (teamId: number) => Promise<Sprint[]>;
   createSprint: (teamId: number, values: { name: string }) => Promise<Sprint>;
-  updateSprint: (sprintId: number, values: { name?: string; active?: boolean }) => Promise<Sprint>;
+  updateSprint: (sprintId: number, values: { name?: string; active?: boolean }, teamId?: number) => Promise<Sprint>;
+  deleteSprint: (sprintId: number, teamId?: number) => Promise<void>;
 }
 
 interface SprintPageProps {
@@ -22,6 +23,7 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [confirmingSprint, setConfirmingSprint] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     if (teamId === null) {
@@ -82,11 +84,30 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
   }
 
   async function updateSprintName(sprint: Sprint) {
+    if (sprint.teamId !== currentTeamId) {
+      return;
+    }
     const name = renaming[sprint.id]?.trim();
     if (!name || name === sprint.name) {
       return;
     }
-    await runAction(() => api.updateSprint(sprint.id, { name }));
+    await runAction(() => api.updateSprint(sprint.id, { name }, currentTeamId));
+  }
+
+  function requestDeleteSprint(sprint: Sprint) {
+    if (sprint.teamId !== currentTeamId) {
+      return;
+    }
+    setConfirmingSprint({ id: sprint.id, name: sprint.name });
+  }
+
+  async function confirmDeleteSprint() {
+    if (!confirmingSprint) {
+      return;
+    }
+    const request = confirmingSprint;
+    setConfirmingSprint(null);
+    await runAction(() => api.deleteSprint(request.id, currentTeamId));
   }
 
   async function runAction(action: () => Promise<void | Sprint>) {
@@ -153,17 +174,32 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
                 <td>{sprint.active ? "启用" : "停用"}</td>
                 <td>
                   <div className="row-actions">
-                    <button type="button" className="secondary-button" disabled={busy} onClick={() => void updateSprintName(sprint)}>
-                      保存名称
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      aria-label={`${sprint.active ? "停用" : "启用"} ${sprint.name}`}
-                      onClick={() => void runAction(() => api.updateSprint(sprint.id, { active: !sprint.active }))}
-                    >
-                      {sprint.active ? "停用" : "启用"}
-                    </button>
+                    {sprint.teamId === currentTeamId ? (
+                      <>
+                        <button type="button" className="secondary-button" disabled={busy} onClick={() => void updateSprintName(sprint)}>
+                          保存名称
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          aria-label={`${sprint.active ? "停用" : "启用"} ${sprint.name}`}
+                          onClick={() => void runAction(() => api.updateSprint(sprint.id, { active: !sprint.active }, currentTeamId))}
+                        >
+                          {sprint.active ? "停用" : "启用"}
+                        </button>
+                        <button
+                          type="button"
+                          className="delete-button"
+                          disabled={busy}
+                          aria-label={`删除 ${sprint.name}`}
+                          onClick={() => requestDeleteSprint(sprint)}
+                        >
+                          删除
+                        </button>
+                      </>
+                    ) : (
+                      <span>仅本团队可操作</span>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -176,6 +212,33 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
           </tbody>
         </table>
       </div>
+
+      {confirmingSprint && (
+        <div className="modal-backdrop">
+          <section
+            className="task-modal confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-sprint-delete-title"
+          >
+            <div className="modal-heading">
+              <div>
+            <p className="workspace-kicker">不可撤销</p>
+                <h3 id="confirm-sprint-delete-title">确认删除 Sprint</h3>
+              </div>
+            </div>
+            <p>确认删除 Sprint“{confirmingSprint.name}”吗？删除后不可恢复。</p>
+            <div className="modal-actions">
+              <button type="button" className="secondary-button" onClick={() => setConfirmingSprint(null)}>
+                取消
+              </button>
+              <button type="button" disabled={busy} onClick={() => void confirmDeleteSprint()}>
+                确认删除
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }

@@ -195,4 +195,34 @@ describe("TaskModal", () => {
 
     expect(screen.getByLabelText("描述")).toHaveFocus();
   });
+
+  it("shows a confirm dialog before deleting task", async () => {
+    const onDelete = vi.fn();
+
+    render(
+      <TaskModal
+        task={{
+          id: 10,
+          teamId: 1,
+          teamName: "平台组",
+          title: "待删任务",
+          status: "TODO"
+        }}
+        members={[]}
+        sprints={[]}
+        submitting={false}
+        deleting={false}
+        error={null}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        onDelete={onDelete}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "删除" }));
+    expect(screen.getByRole("dialog", { name: "确认删除任务" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "确认删除" }));
+
+    expect(onDelete).toHaveBeenCalled();
+  });
 });

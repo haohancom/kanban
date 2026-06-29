@@ -47,6 +47,7 @@ export default function TaskModal({
   const [status, setStatus] = useState<TaskStatus>("TODO");
   const [sprintId, setSprintId] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const modalRef = useRef<HTMLElement | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const onCloseRef = useRef(onClose);
@@ -106,6 +107,15 @@ export default function TaskModal({
       return;
     }
     await onDelete();
+  }
+
+  async function confirmDelete() {
+    try {
+      await handleDelete();
+      setConfirmingDelete(false);
+    } catch {
+      // keep confirm dialog open to allow retry
+    }
   }
 
   return (
@@ -200,7 +210,7 @@ export default function TaskModal({
               <button
                 type="button"
                 className="secondary-button"
-                onClick={() => void handleDelete()}
+                onClick={() => setConfirmingDelete(true)}
                 disabled={deleting || submitting}
               >
                 删除
@@ -211,6 +221,33 @@ export default function TaskModal({
             </button>
           </div>
         </form>
+
+        {confirmingDelete && (
+          <div className="modal-backdrop">
+            <section
+              className="task-modal confirm-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="confirm-task-delete-title"
+            >
+              <div className="modal-heading">
+                <div>
+                  <p className="workspace-kicker">不可撤销</p>
+                  <h3 id="confirm-task-delete-title">确认删除任务</h3>
+                </div>
+              </div>
+              <p>确认删除任务“{task?.title}”吗？删除后不可恢复。</p>
+              <div className="modal-actions">
+                <button type="button" className="secondary-button" onClick={() => setConfirmingDelete(false)}>
+                  取消
+                </button>
+                <button type="button" disabled={deleting || submitting} onClick={() => void confirmDelete()}>
+                  确认删除
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
       </section>
     </div>
   );

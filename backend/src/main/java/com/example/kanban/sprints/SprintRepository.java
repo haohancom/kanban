@@ -74,6 +74,11 @@ public class SprintRepository {
                 id);
     }
 
+    public void delete(long id) {
+        jdbc.update("update tasks set sprint_id = null where sprint_id = ?", id);
+        jdbc.update("delete from sprints where id = ?", id);
+    }
+
     private static SprintRecord mapSprint(ResultSet resultSet, int rowNumber) throws SQLException {
         return new SprintRecord(
                 resultSet.getLong("id"),

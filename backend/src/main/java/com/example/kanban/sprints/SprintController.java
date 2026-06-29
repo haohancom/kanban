@@ -6,11 +6,14 @@ import com.example.kanban.teams.TeamRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -61,9 +64,11 @@ public class SprintController {
     public SprintDtos.SprintResponse update(
             Authentication authentication,
             @PathVariable long id,
+            @RequestParam(required = false) Long teamId,
             @Valid @RequestBody SprintDtos.UpdateSprintRequest request) {
         CurrentUser currentUser = currentUser(authentication);
         SprintRepository.SprintRecord sprint = findSprintOrThrow(id);
+        validateSprintTeamScope(currentUser.getId(), sprint, teamId);
         requireCanManageTeam(currentUser.getId(), sprint.getTeamId());
         if (request.getName() != null && !StringUtils.hasText(request.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -72,6 +77,26 @@ public class SprintController {
         boolean updatedActive = request.getActive() == null ? sprint.isActive() : request.getActive();
         sprintRepository.update(id, updatedName, updatedActive);
         return SprintDtos.SprintResponse.from(findSprintOrThrow(id));
+    }
+
+    @DeleteMapping("/api/sprints/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(Authentication authentication, @PathVariable long id, @RequestParam(required = false) Long teamId) {
+        CurrentUser currentUser = currentUser(authentication);
+        SprintRepository.SprintRecord sprint = findSprintOrThrow(id);
+        validateSprintTeamScope(currentUser.getId(), sprint, teamId);
+        requireCanManageTeam(currentUser.getId(), sprint.getTeamId());
+        sprintRepository.delete(id);
+    }
+
+    private void validateSprintTeamScope(long userId, SprintRepository.SprintRecord sprint, Long teamId) {
+        if (authorizationService.isSuperAdministrator(userId)) {
+            return;
+        }
+        if (teamId == null || teamId == sprint.getTeamId()) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     private void requireCanManageTeam(long userId, long teamId) {

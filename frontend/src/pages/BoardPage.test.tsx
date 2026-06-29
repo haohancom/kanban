@@ -230,6 +230,8 @@ describe("BoardPage", () => {
     expect(card).not.toBeNull();
     await userEvent.dblClick(card as HTMLElement);
     await userEvent.click(screen.getByRole("button", { name: "删除" }));
+    expect(screen.getByRole("dialog", { name: "确认删除任务" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "确认删除" }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
