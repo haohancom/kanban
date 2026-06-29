@@ -168,7 +168,7 @@ export default function TaskModal({
             </label>
 
             <label className="field">
-              <span>冲刺</span>
+              <span>Sprint</span>
               <select value={sprintId} onChange={(event) => setSprintId(event.target.value)}>
                 <option value="">未指定</option>
                 {sprints.map((sprint) => (

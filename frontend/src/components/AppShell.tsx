@@ -104,7 +104,7 @@ export default function AppShell({
             requirement="team-manager"
           >
             <NavButton activeView={activeView} view="sprints" onSelect={onSelectView}>
-              冲刺管理
+              Sprint 管理
             </NavButton>
             <NavButton activeView={activeView} view="recycle-bin" onSelect={onSelectView}>
               回收站
@@ -192,7 +192,7 @@ function viewTitle(view: WorkspaceView) {
     return "团队管理";
   }
   if (view === "sprints") {
-    return "冲刺管理";
+    return "Sprint 管理";
   }
   if (view === "recycle-bin") {
     return "回收站";

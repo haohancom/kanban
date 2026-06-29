@@ -89,12 +89,12 @@ export default function BoardFilters({ teams, members, sprints, value, onChange 
       </label>
 
       <label className="field compact-field">
-        <span>冲刺</span>
+        <span>Sprint</span>
         <select
           value={value.sprintId ?? ""}
           onChange={(event) => updateNumberFilter("sprintId", event.target.value)}
         >
-          <option value="">全部冲刺</option>
+          <option value="">全部 Sprint</option>
           {sprints.map((sprint) => (
             <option key={sprint.id} value={sprint.id}>
               {sprint.name}

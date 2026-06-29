@@ -26,8 +26,8 @@ describe("SprintPage", () => {
 
     expect(await screen.findByText("Sprint 1")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("冲刺名称"), "Sprint 2");
-    await user.click(screen.getByRole("button", { name: "创建冲刺" }));
+    await user.type(screen.getByLabelText("Sprint 名称"), "Sprint 2");
+    await user.click(screen.getByRole("button", { name: "创建 Sprint" }));
     await user.click(screen.getByRole("button", { name: "停用 Sprint 1" }));
 
     expect(api.createSprint).toHaveBeenCalledWith(1, { name: "Sprint 2" });

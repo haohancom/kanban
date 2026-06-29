@@ -176,7 +176,7 @@ public abstract class IntegrationTestSupport {
         return key.longValue();
     }
 
-    private long createSprint(long teamId, String name) {
+    protected long createSprint(long teamId, String name) {
         org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbc.update(connection -> {
             java.sql.PreparedStatement statement = connection.prepareStatement(

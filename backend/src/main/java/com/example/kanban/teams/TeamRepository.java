@@ -10,8 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public class TeamRepository {
@@ -86,6 +89,19 @@ public class TeamRepository {
                 Integer.class,
                 id);
         return count != null && count > 0;
+    }
+
+    public List<Long> listSelfAndAncestors(long teamId) {
+        List<Long> teamIds = new ArrayList<>();
+        Set<Long> seen = new HashSet<>();
+        TeamRecord current = findById(teamId).orElse(null);
+        while (current != null && !seen.contains(current.getId())) {
+            seen.add(current.getId());
+            teamIds.add(current.getId());
+            Long parentId = current.getParentId();
+            current = parentId == null ? null : findById(parentId).orElse(null);
+        }
+        return teamIds;
     }
 
     public void delete(long id) {

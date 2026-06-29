@@ -59,7 +59,7 @@ export default function BoardPage({
   );
   const subTeams = useMemo(() => (selectedTeam ? flattenTeams(selectedTeam.children) : []), [selectedTeam]);
   const filterMembers = useMemo(() => uniqueMembers(Object.values(membersByTeam).flat()), [membersByTeam]);
-  const filterSprints = useMemo(() => Object.values(sprintsByTeam).flat(), [sprintsByTeam]);
+  const filterSprints = useMemo(() => uniqueSprints(Object.values(sprintsByTeam).flat()), [sprintsByTeam]);
   const modalTeamId = editingTask?.teamId ?? selectedTeamId;
   const modalMembers = modalTeamId === null ? [] : membersByTeam[modalTeamId] ?? [];
   const modalSprints = modalTeamId === null ? [] : sprintsByTeam[modalTeamId] ?? [];
@@ -335,6 +335,16 @@ function uniqueMembers(members: MemberOption[]) {
   members.forEach((member) => {
     if (!unique.has(member.id)) {
       unique.set(member.id, member);
+    }
+  });
+  return Array.from(unique.values());
+}
+
+function uniqueSprints(sprints: Sprint[]) {
+  const unique = new Map<number, Sprint>();
+  sprints.forEach((sprint) => {
+    if (!unique.has(sprint.id)) {
+      unique.set(sprint.id, sprint);
     }
   });
   return Array.from(unique.values());

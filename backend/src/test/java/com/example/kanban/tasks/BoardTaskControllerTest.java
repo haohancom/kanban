@@ -105,6 +105,29 @@ class BoardTaskControllerTest extends IntegrationTestSupport {
     }
 
     @Test
+    void memberCanAssignAncestorTeamSprintWhenUpdatingTask() throws Exception {
+        Fixture fixture = createTeamTreeWithSprintAndAssignees();
+        long parentSprintId = createSprint(fixture.rootTeamId, "父团队 Sprint");
+
+        String created = mvc.perform(post("/api/teams/" + fixture.childTeamId + "/tasks")
+                        .session(fixture.memberSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"上级团队 sprint 任务\",\"sprintId\":" + parentSprintId + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.teamId").value((int) fixture.childTeamId))
+                .andExpect(jsonPath("$.sprintId").value((int) parentSprintId))
+                .andReturn().getResponse().getContentAsString();
+
+        long taskId = ((Number) JsonPath.read(created, "$.id")).longValue();
+
+        mvc.perform(patch("/api/tasks/" + taskId).session(fixture.memberSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sprintId\":" + parentSprintId + "}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sprintId").value((int) parentSprintId));
+    }
+
+    @Test
     void memberCannotCreateTasksInVisibleDescendantTeamWithoutDirectMembership() throws Exception {
         Fixture fixture = createTeamTreeWithSprintAndAssignees();
         jdbc.update(

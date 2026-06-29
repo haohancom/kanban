@@ -170,7 +170,7 @@ public class TaskController {
         }
         SprintRepository.SprintRecord sprint = sprintRepository.findById(sprintId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-        if (sprint.getTeamId() != teamId) {
+        if (!teamRepository.listSelfAndAncestors(teamId).contains(sprint.getTeamId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }

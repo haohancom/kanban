@@ -31,7 +31,7 @@ describe("BoardFilters", () => {
     await userEvent.selectOptions(screen.getByLabelText("子团队"), "2");
     await userEvent.selectOptions(screen.getByLabelText("成员"), "3");
     await userEvent.selectOptions(screen.getByLabelText("状态"), "TODO");
-    await userEvent.selectOptions(screen.getByLabelText("冲刺"), "4");
+    await userEvent.selectOptions(screen.getByLabelText("Sprint"), "4");
 
     expect(onChange).toHaveBeenLastCalledWith({
       subTeamId: 2,

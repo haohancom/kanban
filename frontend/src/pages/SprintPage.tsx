@@ -45,7 +45,7 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
       })
       .catch((cause: unknown) => {
         if (active) {
-          setError(errorMessage(cause, "无法加载冲刺"));
+          setError(errorMessage(cause, "无法加载 Sprint"));
         }
       })
       .finally(() => {
@@ -63,7 +63,7 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
     return (
       <section className="workspace-empty">
         <h2>请选择团队</h2>
-        <p>选择团队后可以管理该团队的冲刺。</p>
+        <p>选择团队后可以管理该团队的 Sprint。</p>
       </section>
     );
   }
@@ -96,7 +96,7 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
       await action();
       setReloadKey((current) => current + 1);
     } catch (cause: unknown) {
-      setError(errorMessage(cause, "冲刺操作失败"));
+      setError(errorMessage(cause, "Sprint 操作失败"));
     } finally {
       setBusy(false);
     }
@@ -107,24 +107,24 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
       <div className="board-toolbar">
         <div>
           <p className="workspace-kicker">团队管理</p>
-          <h2 id="sprints-title">冲刺管理</h2>
+          <h2 id="sprints-title">Sprint 管理</h2>
         </div>
       </div>
 
       {loading && (
         <p className="board-loading" role="status">
-          正在加载冲刺
+          正在加载 Sprint
         </p>
       )}
       {error && <p className="form-error">{error}</p>}
 
       <form className="admin-inline-form" onSubmit={createSprint}>
         <label className="field">
-          <span>冲刺名称</span>
+          <span>Sprint 名称</span>
           <input value={newSprintName} onChange={(event) => setNewSprintName(event.target.value)} />
         </label>
         <button type="submit" disabled={busy || !newSprintName.trim()}>
-          创建冲刺
+          创建 Sprint
         </button>
       </form>
 
@@ -143,7 +143,7 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
                 <td>
                   <span className="table-primary">{sprint.name}</span>
                   <input
-                    aria-label={`冲刺名称 ${sprint.name}`}
+                    aria-label={`Sprint 名称 ${sprint.name}`}
                     value={renaming[sprint.id] ?? sprint.name}
                     onChange={(event) =>
                       setRenaming((current) => ({ ...current, [sprint.id]: event.target.value }))
@@ -170,7 +170,7 @@ export default function SprintPage({ api = defaultApi, teamId }: SprintPageProps
             ))}
             {!loading && sprints.length === 0 && (
               <tr>
-                <td colSpan={3}>暂无冲刺</td>
+                <td colSpan={3}>暂无 Sprint</td>
               </tr>
             )}
           </tbody>

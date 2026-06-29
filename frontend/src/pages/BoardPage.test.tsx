@@ -51,7 +51,10 @@ describe("BoardPage", () => {
         return Response.json([{ id: 21, teamId: 1, name: "Parent Sprint", active: true }]);
       }
       if (url === "/api/teams/2/sprints") {
-        return Response.json([{ id: 22, teamId: 2, name: "Child Sprint", active: true }]);
+        return Response.json([
+          { id: 21, teamId: 1, name: "Parent Sprint", active: true },
+          { id: 22, teamId: 2, name: "Child Sprint", active: true }
+        ]);
       }
 
       return new Response("{}", { status: 404 });
@@ -83,7 +86,7 @@ describe("BoardPage", () => {
     const dialog = screen.getByRole("dialog", { name: "子团队任务" });
     expect(within(dialog).getByRole("option", { name: "Child Sprint" })).toBeInTheDocument();
     expect(within(dialog).getByRole("option", { name: "小王" })).toBeInTheDocument();
-    expect(within(dialog).queryByRole("option", { name: "Parent Sprint" })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("option", { name: "Parent Sprint" })).toBeInTheDocument();
   });
 
   it("hides previous team tasks immediately when switching teams", async () => {

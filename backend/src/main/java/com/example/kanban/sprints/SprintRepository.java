@@ -9,8 +9,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class SprintRepository {
@@ -46,10 +48,22 @@ public class SprintRepository {
     }
 
     public List<SprintRecord> listByTeam(long teamId) {
+        return listByTeamIds(Collections.singletonList(teamId));
+    }
+
+    public List<SprintRecord> listByTeamIds(List<Long> teamIds) {
+        if (teamIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        String placeholders = teamIds.stream()
+                .map(ignored -> "?")
+                .collect(Collectors.joining(","));
+
+        Object[] args = teamIds.toArray();
         return jdbc.query(
-                "select id, team_id, name, active from sprints where team_id = ? order by id",
+                "select id, team_id, name, active from sprints where team_id in (" + placeholders + ") order by id",
                 SprintRepository::mapSprint,
-                teamId);
+                args);
     }
 
     public void update(long id, String name, boolean active) {

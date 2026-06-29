@@ -8,6 +8,8 @@ import org.springframework.http.MediaType;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,6 +65,17 @@ class SprintControllerTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("已有冲刺"))
                 .andExpect(jsonPath("$[0].active").value(false));
+    }
+
+    @Test
+    void childTeamListsAncestorSprints() throws Exception {
+        Fixture fixture = createTeamTreeWithSprintAndAssignees();
+        createSprint(fixture.rootTeamId, "父团队 Sprint", true);
+
+        mvc.perform(get("/api/teams/" + fixture.childTeamId + "/sprints").session(fixture.adminSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].name", containsInAnyOrder("2026 Q3 冲刺", "父团队 Sprint")));
     }
 
     @Test

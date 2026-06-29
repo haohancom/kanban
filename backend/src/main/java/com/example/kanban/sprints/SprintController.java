@@ -40,7 +40,7 @@ public class SprintController {
         if (!authorizationService.canViewTeamTree(currentUser.getId(), teamId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        return sprintRepository.listByTeam(teamId).stream()
+        return sprintRepository.listByTeamIds(teamRepository.listSelfAndAncestors(teamId)).stream()
                 .map(SprintDtos.SprintResponse::from)
                 .collect(Collectors.toList());
     }

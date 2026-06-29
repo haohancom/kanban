@@ -40,7 +40,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByRole("button", { name: "团队管理" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "冲刺管理" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sprint 管理" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "回收站" })).toBeInTheDocument();
   });
 
@@ -94,7 +94,7 @@ describe("AppShell", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "团队管理" }));
 
-    expect(screen.queryByRole("button", { name: "冲刺管理" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sprint 管理" })).not.toBeInTheDocument();
     expect(selectView).toHaveBeenCalledWith("team-admin");
   });
 
