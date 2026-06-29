@@ -16,3 +16,26 @@ export function deleteCurrentUserAvatar() {
     method: "DELETE"
   });
 }
+
+export interface UpdateCurrentUserPayload {
+  displayName: string;
+}
+
+export interface UpdateCurrentUserPasswordPayload {
+  currentPassword?: string;
+  newPassword: string;
+}
+
+export function updateCurrentUser(payload: UpdateCurrentUserPayload) {
+  return apiRequest<CurrentUser>("/api/users/me", {
+    method: "PATCH",
+    body: payload
+  });
+}
+
+export function updateCurrentUserPassword(payload: UpdateCurrentUserPasswordPayload) {
+  return apiRequest<CurrentUser>("/api/users/me/password", {
+    method: "PATCH",
+    body: payload
+  });
+}

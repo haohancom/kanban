@@ -1,19 +1,24 @@
-import { ChangeEvent, ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { CurrentUser, Team } from "../types";
 import RoleGate from "./RoleGate";
 import TeamTree from "./TeamTree";
 import UserAvatar from "./UserAvatar";
 
-export type WorkspaceView = "board" | "team-admin" | "sprints" | "recycle-bin" | "users" | "snapshots";
+export type WorkspaceView =
+  | "board"
+  | "team-admin"
+  | "sprints"
+  | "recycle-bin"
+  | "users"
+  | "snapshots"
+  | "profile";
 
 interface AppShellProps {
   activeView: WorkspaceView;
   children: ReactNode;
-  onDeleteAvatar?: () => Promise<void>;
   onLogout: () => Promise<void>;
   onSelectTeam: (teamId: number) => void;
   onSelectView: (view: WorkspaceView) => void;
-  onUploadAvatar?: (file: File) => Promise<void>;
   selectedTeam: Team | null;
   selectedTeamId: number | null;
   teamError: string | null;
@@ -25,11 +30,9 @@ interface AppShellProps {
 export default function AppShell({
   activeView,
   children,
-  onDeleteAvatar = async () => undefined,
   onLogout,
   onSelectTeam,
   onSelectView,
-  onUploadAvatar = async () => undefined,
   selectedTeam,
   selectedTeamId,
   teamError,
@@ -39,38 +42,6 @@ export default function AppShell({
 }: AppShellProps) {
   const canManageSelectedTeam = canManageTeam(teams, selectedTeamId, user.superAdmin);
   const canOpenTeamAdmin = user.superAdmin || canManageSelectedTeam;
-  const [avatarBusy, setAvatarBusy] = useState(false);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
-
-  async function uploadAvatar(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    setAvatarBusy(true);
-    setAvatarError(null);
-    try {
-      await onUploadAvatar(file);
-      event.target.value = "";
-    } catch {
-      setAvatarError("头像上传失败");
-    } finally {
-      setAvatarBusy(false);
-    }
-  }
-
-  async function deleteAvatar() {
-    setAvatarBusy(true);
-    setAvatarError(null);
-    try {
-      await onDeleteAvatar();
-    } catch {
-      setAvatarError("头像上传失败");
-    } finally {
-      setAvatarBusy(false);
-    }
-  }
 
   return (
     <main className="app-shell">
@@ -91,6 +62,9 @@ export default function AppShell({
         <nav className="workspace-nav" aria-label="工作区导航">
           <NavButton activeView={activeView} view="board" onSelect={onSelectView}>
             看板
+          </NavButton>
+          <NavButton activeView={activeView} view="profile" onSelect={onSelectView}>
+            个人资料
           </NavButton>
           {canOpenTeamAdmin && (
             <NavButton activeView={activeView} view="team-admin" onSelect={onSelectView}>
@@ -131,28 +105,6 @@ export default function AppShell({
             <UserAvatar avatarUrl={user.avatarUrl} displayName={user.displayName} username={user.username} />
             <div className="current-user-details">
               <span className="current-user-name">{user.displayName}</span>
-              {avatarError && <p className="avatar-error">{avatarError}</p>}
-            </div>
-            <div className="avatar-actions">
-              <label className={avatarBusy ? "avatar-upload-button disabled" : "avatar-upload-button"}>
-                上传头像
-                <input
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={avatarBusy}
-                  onChange={(event) => void uploadAvatar(event)}
-                  type="file"
-                />
-              </label>
-              {user.avatarUrl && (
-                <button
-                  type="button"
-                  className="secondary-button avatar-remove-button"
-                  disabled={avatarBusy}
-                  onClick={() => void deleteAvatar()}
-                >
-                  移除头像
-                </button>
-              )}
             </div>
             <button type="button" onClick={() => void onLogout()}>
               退出
@@ -199,6 +151,9 @@ function viewTitle(view: WorkspaceView) {
   }
   if (view === "users") {
     return "用户管理";
+  }
+  if (view === "profile") {
+    return "个人资料";
   }
   if (view === "snapshots") {
     return "快照设置";

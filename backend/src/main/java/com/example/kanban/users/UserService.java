@@ -82,9 +82,42 @@ public class UserService {
         return findUserOrThrow(id);
     }
 
+    public UserRepository.UserRecord updateCurrentDisplayName(long id, String displayName) {
+        if (!StringUtils.hasText(displayName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        UserRepository.UserRecord current = findUserOrThrow(id);
+        userRepository.update(id, displayName, current.isSuperAdmin());
+        return findUserOrThrow(id);
+    }
+
     public void resetPassword(long id, String password) {
         findUserOrThrow(id);
         userRepository.updatePasswordHash(id, passwordEncoder.encode(password));
+    }
+
+    public UserRepository.UserRecord changeOwnPassword(
+            long id,
+            boolean isSuperAdmin,
+            String currentPassword,
+            String newPassword) {
+        if (!StringUtils.hasText(newPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        if (!isSuperAdmin) {
+            if (!StringUtils.hasText(currentPassword)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+            UserRepository.UserRecord current = findUserOrThrow(id);
+            if (!passwordEncoder.matches(currentPassword, current.getPasswordHash())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
+        }
+
+        userRepository.updatePasswordHash(id, passwordEncoder.encode(newPassword));
+        return findUserOrThrow(id);
     }
 
     public UserRepository.UserRecord updateAvatar(long id, MultipartFile file) {

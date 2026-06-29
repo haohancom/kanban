@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { deleteCurrentUserAvatar, uploadCurrentUserAvatar } from "./api/profile";
 import { listTeams } from "./api/teams";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import AppShell, { WorkspaceView } from "./components/AppShell";
@@ -10,7 +9,8 @@ import SnapshotSettingsPage from "./pages/SnapshotSettingsPage";
 import SprintPage from "./pages/SprintPage";
 import TeamAdminPage from "./pages/TeamAdminPage";
 import UserAdminPage from "./pages/UserAdminPage";
-import { Team } from "./types";
+import ProfilePage from "./pages/ProfilePage";
+import { CurrentUser, Team } from "./types";
 
 function AppContent() {
   const { user, loading, logout, setCurrentUser } = useAuth();
@@ -89,15 +89,9 @@ function AppContent() {
   return (
     <AppShell
       activeView={visibleView}
-      onDeleteAvatar={async () => {
-        setCurrentUser(await deleteCurrentUserAvatar());
-      }}
       onLogout={logout}
       onSelectTeam={setSelectedTeamId}
       onSelectView={setActiveView}
-      onUploadAvatar={async (file) => {
-        setCurrentUser(await uploadCurrentUserAvatar(file));
-      }}
       selectedTeam={selectedTeam}
       selectedTeamId={selectedTeamId}
       teamError={teamError}
@@ -108,6 +102,8 @@ function AppContent() {
       {renderWorkspace(visibleView, {
         canManageSelectedTeam,
         currentUserId: user.id,
+        currentUser: user,
+        onCurrentUserUpdated: setCurrentUser,
         onTeamsChanged: () => setTeamsReloadKey((current) => current + 1),
         selectedTeam,
         superAdmin: user.superAdmin,
@@ -121,7 +117,9 @@ function renderWorkspace(
   view: WorkspaceView,
   context: {
     canManageSelectedTeam: boolean;
+    currentUser: CurrentUser;
     currentUserId: number;
+    onCurrentUserUpdated: (user: CurrentUser) => void;
     onTeamsChanged: () => void;
     selectedTeam: Team | null;
     superAdmin: boolean;
@@ -139,6 +137,9 @@ function renderWorkspace(
   }
   if (view === "users") {
     return <UserAdminPage currentUserId={context.currentUserId} />;
+  }
+  if (view === "profile") {
+    return <ProfilePage currentUser={context.currentUser} onUserUpdated={context.onCurrentUserUpdated} />;
   }
   if (view === "snapshots") {
     return <SnapshotSettingsPage />;

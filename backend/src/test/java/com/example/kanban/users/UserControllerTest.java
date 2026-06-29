@@ -101,6 +101,62 @@ class UserControllerTest extends IntegrationTestSupport {
     }
 
     @Test
+    void currentUserCanUpdateDisplayName() throws Exception {
+        MockHttpSession member = createPlainMemberSession();
+
+        mvc.perform(patch("/api/users/me")
+                        .session(member)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"新名字\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("新名字"))
+                .andExpect(jsonPath("$.username").value("member"));
+    }
+
+    @Test
+    void regularUserMustProvideCurrentPasswordWhenChangingPassword() throws Exception {
+        MockHttpSession member = createPlainMemberSession();
+
+        mvc.perform(patch("/api/users/me/password").session(member)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"changed123\"}"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(patch("/api/users/me/password").session(member)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"wrong\",\"newPassword\":\"changed123\"}"))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(patch("/api/users/me/password").session(member)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"member123\",\"newPassword\":\"changed123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("普通成员"));
+
+        mvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"username\":\"member\",\"password\":\"changed123\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void superAdministratorCanChangeOwnPasswordWithoutCurrentPassword() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+
+        mvc.perform(patch("/api/users/me/password").session(admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"newPassword\":\"changed123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("超级管理员"));
+
+        mvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"password\":\"changed123\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void cannotDemoteOnlySuperAdministrator() throws Exception {
         MockHttpSession admin = loginAsAdmin();
         String currentUser = mvc.perform(get("/api/auth/me").session(admin))
@@ -208,6 +264,15 @@ class UserControllerTest extends IntegrationTestSupport {
 
     @Test
     void avatarEndpointsRequireAuthentication() throws Exception {
+        mvc.perform(patch("/api/users/me").contentType(MediaType.APPLICATION_JSON).content("{\"displayName\":\"x\"}"))
+                .andExpect(status().isUnauthorized());
+
+        mvc.perform(
+                        patch("/api/users/me/password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"newPassword\":\"changed123\"}"))
+                .andExpect(status().isUnauthorized());
+
         mvc.perform(multipart("/api/users/me/avatar")
                         .file(new MockMultipartFile("file", "avatar.png", "image/png", new byte[] {1}))
                         .with(request -> {

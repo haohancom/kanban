@@ -50,6 +50,42 @@ public final class UserDtos {
         }
     }
 
+    public static class CurrentUserUpdateRequest {
+        @NotBlank
+        private String displayName;
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public void setDisplayName(String displayName) {
+            this.displayName = displayName;
+        }
+    }
+
+    public static class CurrentUserPasswordRequest {
+        private String currentPassword;
+
+        @NotBlank
+        private String newPassword;
+
+        public String getCurrentPassword() {
+            return currentPassword;
+        }
+
+        public void setCurrentPassword(String currentPassword) {
+            this.currentPassword = currentPassword;
+        }
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
+        }
+    }
+
     public static class CreateUserRequest {
         @NotBlank
         private String username;

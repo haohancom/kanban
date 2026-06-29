@@ -63,6 +63,14 @@ public class UserController {
                 request.getSuperAdmin()));
     }
 
+    @PatchMapping("/me")
+    public CurrentUser updateProfile(
+            Authentication authentication,
+            @Valid @RequestBody UserDtos.CurrentUserUpdateRequest request) {
+        CurrentUser currentUser = currentUser(authentication);
+        return CurrentUser.from(userService.updateCurrentDisplayName(currentUser.getId(), request.getDisplayName()));
+    }
+
     @PatchMapping("/{id}/password")
     public void resetPassword(
             Authentication authentication,
@@ -70,6 +78,18 @@ public class UserController {
             @Valid @RequestBody UserDtos.ResetPasswordRequest request) {
         requireSuperAdministrator(authentication);
         userService.resetPassword(id, request.getPassword());
+    }
+
+    @PatchMapping("/me/password")
+    public CurrentUser changeOwnPassword(
+            Authentication authentication,
+            @Valid @RequestBody UserDtos.CurrentUserPasswordRequest request) {
+        CurrentUser currentUser = currentUser(authentication);
+        return CurrentUser.from(userService.changeOwnPassword(
+                currentUser.getId(),
+                currentUser.isSuperAdmin(),
+                request.getCurrentPassword(),
+                request.getNewPassword()));
     }
 
     @PutMapping("/me/avatar")
