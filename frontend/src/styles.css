@@ -50,9 +50,16 @@ button:disabled {
   color: #eef4fb;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   min-height: 100vh;
-  padding: 22px 18px;
+  padding: 14px 14px;
+}
+
+.sidebar-brand {
+  align-items: center;
+  display: flex;
+  min-height: 40px;
+  padding: 2px 4px;
 }
 
 .sidebar-brand h1 {
@@ -649,7 +656,35 @@ form {
   align-items: end;
   display: flex;
   gap: 10px;
+}
+
+.task-card-footer {
+  align-items: end;
+  display: flex;
+  gap: 10px;
   justify-content: space-between;
+}
+
+.task-card-assignee {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  border: 1px solid #d8dee8;
+  border-radius: 999px;
+  padding: 4px 9px;
+  margin-left: auto;
+}
+
+.task-card-assignee-name {
+  color: #17202a;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.task-card-assignee .avatar-circle {
+  font-size: 0.78rem;
+  height: 24px;
+  width: 24px;
 }
 
 .secondary-button,
@@ -747,7 +782,8 @@ form {
 
   .board-toolbar,
   .toolbar-actions,
-  .task-card-actions {
+  .task-card-actions,
+  .task-card-footer {
     align-items: stretch;
     flex-direction: column;
   }

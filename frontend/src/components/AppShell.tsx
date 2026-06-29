@@ -76,7 +76,6 @@ export default function AppShell({
     <main className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <p className="workspace-kicker">Kanban MVP</p>
           <h1>工作台</h1>
         </div>
 

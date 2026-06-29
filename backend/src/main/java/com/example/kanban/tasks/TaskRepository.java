@@ -20,7 +20,7 @@ public class TaskRepository {
             + "select t.id, t.team_id, teams.name as team_name, t.title, t.description, "
             + "t.remarks, t.risks, t.status, t.sprint_id, sprints.name as sprint_name, "
             + "t.assignee_id, assignee.display_name as assignee_display_name, t.created_by, "
-            + "creator.display_name as created_by_display_name, t.deleted_at "
+            + "assignee.username as assignee_username, creator.display_name as created_by_display_name, t.deleted_at "
             + "from tasks t "
             + "join teams on teams.id = t.team_id "
             + "left join sprints on sprints.id = t.sprint_id "
@@ -213,6 +213,7 @@ public class TaskRepository {
                 resultSet.getString("sprint_name"),
                 nullableLong(resultSet, "assignee_id"),
                 resultSet.getString("assignee_display_name"),
+                resultSet.getString("assignee_username"),
                 resultSet.getLong("created_by"),
                 resultSet.getString("created_by_display_name"),
                 resultSet.getString("deleted_at"));
@@ -266,6 +267,7 @@ public class TaskRepository {
         private final String sprintName;
         private final Long assigneeId;
         private final String assigneeDisplayName;
+        private final String assigneeUsername;
         private final long createdBy;
         private final String createdByDisplayName;
         private final String deletedAt;
@@ -283,6 +285,7 @@ public class TaskRepository {
                 String sprintName,
                 Long assigneeId,
                 String assigneeDisplayName,
+                String assigneeUsername,
                 long createdBy,
                 String createdByDisplayName,
                 String deletedAt) {
@@ -298,6 +301,7 @@ public class TaskRepository {
             this.sprintName = sprintName;
             this.assigneeId = assigneeId;
             this.assigneeDisplayName = assigneeDisplayName;
+            this.assigneeUsername = assigneeUsername;
             this.createdBy = createdBy;
             this.createdByDisplayName = createdByDisplayName;
             this.deletedAt = deletedAt;
@@ -349,6 +353,10 @@ public class TaskRepository {
 
         public String getAssigneeDisplayName() {
             return assigneeDisplayName;
+        }
+
+        public String getAssigneeUsername() {
+            return assigneeUsername;
         }
 
         public long getCreatedBy() {

@@ -37,6 +37,7 @@ export interface BoardTask {
   sprintName?: string | null;
   assigneeId?: number | null;
   assigneeDisplayName?: string | null;
+  assigneeUsername?: string | null;
   createdBy?: number;
   createdByDisplayName?: string;
   deletedAt?: string | null;

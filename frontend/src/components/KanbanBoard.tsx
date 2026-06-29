@@ -1,10 +1,10 @@
 import { DragEvent, useState } from "react";
 import { BoardTask, TaskStatus } from "../types";
+import UserAvatar from "./UserAvatar";
 
 interface KanbanBoardProps {
   tasks: BoardTask[];
   canMoveTask?: (task: BoardTask) => boolean;
-  onDelete?: (task: BoardTask) => void;
   onEdit: (task: BoardTask) => void;
   onMove?: (task: BoardTask, status: TaskStatus) => void;
 }
@@ -17,7 +17,7 @@ const columns: Array<{ status: TaskStatus; label: string }> = [
 
 const taskDragType = "application/x-kanban-task-id";
 
-export default function KanbanBoard({ tasks, canMoveTask, onDelete, onEdit, onMove }: KanbanBoardProps) {
+export default function KanbanBoard({ tasks, canMoveTask, onEdit, onMove }: KanbanBoardProps) {
   const [draggingTaskId, setDraggingTaskId] = useState<number | null>(null);
   const draggingTask = draggingTaskId === null ? null : tasks.find((task) => task.id === draggingTaskId) ?? null;
 
@@ -93,12 +93,13 @@ export default function KanbanBoard({ tasks, canMoveTask, onDelete, onEdit, onMo
                   const dragging = draggingTaskId === task.id;
 
                   return (
-                    <article
+                      <article
                       key={task.id}
                       className={`task-card${movable ? " task-card-draggable" : ""}${
                         dragging ? " is-dragging" : ""
                       }`}
                       draggable={movable}
+                      onDoubleClick={() => onEdit(task)}
                       onDragEnd={() => setDraggingTaskId(null)}
                       onDragStart={(event) => handleDragStart(event, task)}
                     >
@@ -108,26 +109,22 @@ export default function KanbanBoard({ tasks, canMoveTask, onDelete, onEdit, onMo
                       </div>
 
                       <div className="task-meta">
-                        {task.assigneeDisplayName && <span>{task.assigneeDisplayName}</span>}
                         {task.sprintName && <span>{task.sprintName}</span>}
                         {hasText(task.remarks) && <span>有备注</span>}
                         {hasText(task.risks) && <span className="risk-chip">有风险</span>}
                       </div>
 
-                      <div className="task-card-actions">
-                        <button type="button" className="secondary-button" onClick={() => onEdit(task)}>
-                          编辑
-                        </button>
-                        {onDelete && (
-                          <button
-                            type="button"
-                            className="secondary-button"
-                            aria-label={`删除 ${task.title}`}
-                            onClick={() => onDelete(task)}
-                          >
-                            删除
-                          </button>
-                        )}
+                      <div className="task-card-footer">
+                        <div className="task-card-assignee">
+                          <UserAvatar
+                            avatarUrl={undefined}
+                            displayName={task.assigneeDisplayName || task.createdByDisplayName || "未分配"}
+                            username={task.assigneeUsername || task.assigneeDisplayName || "未分配"}
+                          />
+                          <span className="task-card-assignee-name">
+                            {task.assigneeDisplayName || task.createdByDisplayName || "未分配"}
+                          </span>
+                        </div>
                       </div>
                     </article>
                   );

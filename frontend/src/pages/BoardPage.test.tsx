@@ -76,7 +76,9 @@ describe("BoardPage", () => {
       )
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "编辑" }));
+    const card = screen.getByText("子团队任务").closest("article");
+    expect(card).not.toBeNull();
+    await userEvent.dblClick(card as HTMLElement);
 
     const dialog = screen.getByRole("dialog", { name: "子团队任务" });
     expect(within(dialog).getByRole("option", { name: "Child Sprint" })).toBeInTheDocument();
@@ -127,18 +129,14 @@ describe("BoardPage", () => {
     expect(screen.getByRole("status")).toHaveTextContent("正在加载任务");
   });
 
-  it("soft deletes a task from the board and reloads the list", async () => {
-    let tasks = [{ id: 10, teamId: 1, teamName: "研发部", title: "待删除任务", status: "TODO" }];
+  it("does not show delete controls directly on task cards", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
       if (url === "/api/teams/1/board/tasks") {
-        return Response.json(tasks);
+        return Response.json([{ id: 10, teamId: 1, teamName: "研发部", title: "卡片任务", status: "TODO" }]);
       }
-      if (url === "/api/tasks/10" && init?.method === "DELETE") {
-        tasks = [];
-        return new Response(null, { status: 204 });
-      }
+      if (url === "/api/tasks/10" && init?.method === "DELETE") return new Response(null, { status: 204 });
       if (url.endsWith("/members") || url.endsWith("/sprints")) {
         return Response.json([]);
       }
@@ -157,20 +155,12 @@ describe("BoardPage", () => {
       />
     );
 
-    await screen.findByText("待删除任务");
+    await screen.findByText("卡片任务");
 
-    await userEvent.click(screen.getByRole("button", { name: "删除 待删除任务" }));
-
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/tasks/10",
-        expect.objectContaining({ credentials: "include", method: "DELETE" })
-      )
-    );
-    await waitFor(() => expect(screen.queryByText("待删除任务")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: /删除/ })).not.toBeInTheDocument();
   });
 
-  it("hides task deletion controls from users who cannot manage the selected team", async () => {
+  it("hides task deletion controls in modal for users who cannot manage the selected team", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
 
@@ -196,8 +186,55 @@ describe("BoardPage", () => {
     );
 
     await screen.findByText("成员可见任务");
+    const card = screen.getByText("成员可见任务").closest("article");
+    expect(card).not.toBeNull();
+    await userEvent.dblClick(card as HTMLElement);
 
-    expect(screen.queryByRole("button", { name: "删除 成员可见任务" })).not.toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "成员可见任务" });
+    expect(within(dialog).queryByRole("button", { name: "删除" })).not.toBeInTheDocument();
+  });
+
+  it("keeps task deletion in the modal and deletes task from there", async () => {
+    let tasks = [{ id: 10, teamId: 1, teamName: "研发部", title: "可删除任务", status: "TODO" }];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url === "/api/teams/1/board/tasks") {
+        return Response.json(tasks);
+      }
+      if (url.endsWith("/members") || url.endsWith("/sprints")) {
+        return Response.json([]);
+      }
+      if (url === "/api/tasks/10" && init?.method === "DELETE") {
+        tasks = [];
+        return new Response(null, { status: 204 });
+      }
+      return new Response("{}", { status: 404 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <BoardPage
+        canManageSelectedTeam={true}
+        currentUserId={99}
+        selectedTeam={selectedTeam}
+        teamsLoading={false}
+      />
+    );
+
+    const card = (await screen.findByText("可删除任务")).closest("article");
+    expect(card).not.toBeNull();
+    await userEvent.dblClick(card as HTMLElement);
+    await userEvent.click(screen.getByRole("button", { name: "删除" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/tasks/10",
+        expect.objectContaining({ credentials: "include", method: "DELETE" })
+      )
+    );
+    await waitFor(() => expect(screen.queryByText("可删除任务")).not.toBeInTheDocument());
   });
 
   it("updates a member's own task status by dragging it into another column", async () => {

@@ -20,6 +20,7 @@ public final class TaskDtos {
         private final String sprintName;
         private final Long assigneeId;
         private final String assigneeDisplayName;
+        private final String assigneeUsername;
         private final long createdBy;
         private final String createdByDisplayName;
         private final String deletedAt;
@@ -37,6 +38,7 @@ public final class TaskDtos {
                 String sprintName,
                 Long assigneeId,
                 String assigneeDisplayName,
+                String assigneeUsername,
                 long createdBy,
                 String createdByDisplayName,
                 String deletedAt) {
@@ -52,6 +54,7 @@ public final class TaskDtos {
             this.sprintName = sprintName;
             this.assigneeId = assigneeId;
             this.assigneeDisplayName = assigneeDisplayName;
+            this.assigneeUsername = assigneeUsername;
             this.createdBy = createdBy;
             this.createdByDisplayName = createdByDisplayName;
             this.deletedAt = deletedAt;
@@ -71,6 +74,7 @@ public final class TaskDtos {
                     task.getSprintName(),
                     task.getAssigneeId(),
                     task.getAssigneeDisplayName(),
+                    task.getAssigneeUsername(),
                     task.getCreatedBy(),
                     task.getCreatedByDisplayName(),
                     task.getDeletedAt());
@@ -122,6 +126,10 @@ public final class TaskDtos {
 
         public String getAssigneeDisplayName() {
             return assigneeDisplayName;
+        }
+
+        public String getAssigneeUsername() {
+            return assigneeUsername;
         }
 
         public long getCreatedBy() {

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import KanbanBoard from "./KanbanBoard";
+import userEvent from "@testing-library/user-event";
 
 describe("KanbanBoard", () => {
   it("groups task cards by status columns", () => {
@@ -42,6 +43,42 @@ describe("KanbanBoard", () => {
     expect(within(todoColumn).getByText("Sprint A")).toBeInTheDocument();
     expect(within(todoColumn).getByText("有备注")).toBeInTheDocument();
     expect(within(todoColumn).getByText("有风险")).toBeInTheDocument();
+  });
+
+  it("does not render a delete button on cards", () => {
+    render(
+      <KanbanBoard
+        tasks={[
+          { id: 1, title: "接入登录", status: "TODO", teamName: "平台组", assigneeDisplayName: "小王" }
+        ]}
+        onEdit={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "删除 接入登录" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /删除/ })).not.toBeInTheDocument();
+  });
+
+  it("opens edit modal on double click", async () => {
+    const onEdit = vi.fn();
+    render(
+      <KanbanBoard
+        tasks={[
+          {
+            id: 1,
+            title: "接入登录",
+            status: "TODO",
+            teamName: "平台组",
+            assigneeDisplayName: "小王"
+          }
+        ]}
+        onEdit={onEdit}
+      />
+    );
+
+    await userEvent.dblClick(screen.getByText("接入登录"));
+
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 
   it("emits status moves when a permitted task is dropped into another column", () => {

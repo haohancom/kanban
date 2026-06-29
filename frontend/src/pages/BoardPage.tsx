@@ -49,6 +49,7 @@ export default function BoardPage({
   const [editingTask, setEditingTask] = useState<BoardTask | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
+  const [deletingTask, setDeletingTask] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const selectedTeamId = selectedTeam?.id ?? null;
@@ -219,12 +220,28 @@ export default function BoardPage({
 
   async function removeTask(task: BoardTask) {
     setBoardError(null);
+    setModalError(null);
+    setDeletingTask(true);
     try {
       await deleteTask(task.id);
       setReloadKey((current) => current + 1);
+      if (task.id === editingTask?.id) {
+        setModalOpen(false);
+        setEditingTask(null);
+      }
     } catch (cause: unknown) {
       setBoardError(errorMessage(cause, "任务删除失败"));
+      setModalError(errorMessage(cause, "任务删除失败"));
+    } finally {
+      setDeletingTask(false);
     }
+  }
+
+  async function handleDeleteFromModal() {
+    if (!editingTask) {
+      return;
+    }
+    await removeTask(editingTask);
   }
 
   function canMoveTask(task: BoardTask) {
@@ -274,7 +291,6 @@ export default function BoardPage({
       <KanbanBoard
         tasks={visibleTasks}
         canMoveTask={canMoveTask}
-        onDelete={canManageSelectedTeam ? removeTask : undefined}
         onEdit={openEditModal}
         onMove={moveTask}
       />
@@ -285,9 +301,11 @@ export default function BoardPage({
           members={modalMembers}
           sprints={modalSprints}
           submitting={savingTask}
+          deleting={deletingTask}
           error={modalError}
           onClose={() => setModalOpen(false)}
           onSubmit={saveTask}
+          onDelete={canManageSelectedTeam ? handleDeleteFromModal : undefined}
         />
       )}
     </section>

@@ -16,9 +16,11 @@ interface TaskModalProps {
   members: ModalMember[];
   sprints: ModalSprint[];
   submitting: boolean;
+  deleting: boolean;
   error: string | null;
   onClose: () => void;
   onSubmit: (values: TaskFormValues) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
 const statusOptions: Array<{ value: TaskStatus; label: string }> = [
@@ -32,9 +34,11 @@ export default function TaskModal({
   members,
   sprints,
   submitting,
+  deleting,
   error,
   onClose,
-  onSubmit
+  onSubmit,
+  onDelete
 }: TaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -95,6 +99,13 @@ export default function TaskModal({
       sprintId: sprintId === "" ? null : Number(sprintId),
       assigneeId: assigneeId === "" ? null : Number(assigneeId)
     });
+  }
+
+  async function handleDelete() {
+    if (!onDelete) {
+      return;
+    }
+    await onDelete();
   }
 
   return (
@@ -185,6 +196,16 @@ export default function TaskModal({
             <button type="button" className="secondary-button" onClick={onClose}>
               取消
             </button>
+            {task && onDelete && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => void handleDelete()}
+                disabled={deleting || submitting}
+              >
+                删除
+              </button>
+            )}
             <button type="submit" disabled={submitting || !title.trim()}>
               保存
             </button>
