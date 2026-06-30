@@ -606,6 +606,10 @@ form {
   padding: 14px;
 }
 
+.task-card.has-risk {
+  border-color: #dc2626;
+}
+
 .task-card-draggable {
   cursor: grab;
 }
@@ -631,25 +635,23 @@ form {
   margin: 0;
 }
 
-.task-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.task-card-remarks {
+  color: #34495e;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.task-meta span {
+.task-card-sprint {
   background: #eef4fb;
   border: 1px solid #d8dee8;
   border-radius: 999px;
   color: #394b59;
   font-size: 0.78rem;
   padding: 4px 8px;
-}
-
-.task-meta .risk-chip {
-  background: #fef3c7;
-  border-color: #f9d77e;
-  color: #7a4d00;
 }
 
 .task-card-actions {
@@ -662,7 +664,6 @@ form {
   align-items: end;
   display: flex;
   gap: 10px;
-  justify-content: space-between;
 }
 
 .task-card-assignee {
@@ -801,8 +802,7 @@ form {
 
   .board-toolbar,
   .toolbar-actions,
-  .task-card-actions,
-  .task-card-footer {
+  .task-card-actions {
     align-items: stretch;
     flex-direction: column;
   }

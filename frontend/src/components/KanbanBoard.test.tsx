@@ -41,8 +41,11 @@ describe("KanbanBoard", () => {
     const todoColumn = screen.getByLabelText("待开始");
     expect(within(todoColumn).getByText("小王")).toBeInTheDocument();
     expect(within(todoColumn).getByText("Sprint A")).toBeInTheDocument();
-    expect(within(todoColumn).getByText("有备注")).toBeInTheDocument();
-    expect(within(todoColumn).getByText("有风险")).toBeInTheDocument();
+    expect(within(todoColumn).getByText("先做 session")).toBeInTheDocument();
+    const card = screen.getByText("接入登录").closest("article");
+    expect(card).toHaveClass("has-risk");
+    expect(within(todoColumn).queryByText("有备注")).not.toBeInTheDocument();
+    expect(within(todoColumn).queryByText("有风险")).not.toBeInTheDocument();
   });
 
   it("does not render a delete button on cards", () => {

@@ -91,13 +91,15 @@ export default function KanbanBoard({ tasks, canMoveTask, onEdit, onMove }: Kanb
                 columnTasks.map((task) => {
                   const movable = canMove(task);
                   const dragging = draggingTaskId === task.id;
+                  const hasRemarks = hasText(task.remarks);
+                  const hasRisks = hasText(task.risks);
 
                   return (
                       <article
                       key={task.id}
                       className={`task-card${movable ? " task-card-draggable" : ""}${
                         dragging ? " is-dragging" : ""
-                      }`}
+                      }${hasRisks ? " has-risk" : ""}`}
                       draggable={movable}
                       onDoubleClick={() => onEdit(task)}
                       onDragEnd={() => setDraggingTaskId(null)}
@@ -108,13 +110,10 @@ export default function KanbanBoard({ tasks, canMoveTask, onEdit, onMove }: Kanb
                         <h4>{task.title}</h4>
                       </div>
 
-                      <div className="task-meta">
-                        {task.sprintName && <span>{task.sprintName}</span>}
-                        {hasText(task.remarks) && <span>有备注</span>}
-                        {hasText(task.risks) && <span className="risk-chip">有风险</span>}
-                      </div>
+                      {hasRemarks && <p className="task-card-remarks" title={task.remarks}>{task.remarks}</p>}
 
                       <div className="task-card-footer">
+                        {task.sprintName && <span className="task-card-sprint">{task.sprintName}</span>}
                         <div className="task-card-assignee">
                           <UserAvatar
                             avatarUrl={undefined}
