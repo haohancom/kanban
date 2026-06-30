@@ -107,6 +107,7 @@ function AppContent() {
         onTeamsChanged: () => setTeamsReloadKey((current) => current + 1),
         selectedTeam,
         superAdmin: user.superAdmin,
+        canDeleteTeam: canDeleteSelectedTeam(user.superAdmin, selectedTeam),
         teamsLoading
       })}
     </AppShell>
@@ -123,11 +124,18 @@ function renderWorkspace(
     onTeamsChanged: () => void;
     selectedTeam: Team | null;
     superAdmin: boolean;
+    canDeleteTeam: boolean;
     teamsLoading: boolean;
   }
 ) {
   if (view === "team-admin" && (context.superAdmin || context.canManageSelectedTeam)) {
-    return <TeamAdminPage selectedTeam={context.selectedTeam} onTeamsChanged={context.onTeamsChanged} />;
+    return (
+      <TeamAdminPage
+        selectedTeam={context.selectedTeam}
+        onTeamsChanged={context.onTeamsChanged}
+        canDeleteTeam={context.canDeleteTeam}
+      />
+    );
   }
   if (view === "sprints" && context.canManageSelectedTeam) {
     return <SprintPage teamId={context.selectedTeam?.id ?? null} />;
@@ -165,6 +173,16 @@ function resolveView(view: WorkspaceView, superAdmin: boolean, canManageSelected
     return "board";
   }
   return view;
+}
+
+function canDeleteSelectedTeam(superAdmin: boolean, selectedTeam: Team | null) {
+  if (selectedTeam === null) {
+    return false;
+  }
+  if (superAdmin) {
+    return true;
+  }
+  return selectedTeam.role === "TEAM_CREATOR";
 }
 
 function firstTeamId(teams: Team[]): number | null {

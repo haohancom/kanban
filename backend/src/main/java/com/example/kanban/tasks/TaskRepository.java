@@ -180,6 +180,15 @@ public class TaskRepository {
         return jdbc.update(sql, teamIds.toArray());
     }
 
+    public int hardDeleteByTeamIds(List<Long> teamIds) {
+        if (teamIds.isEmpty()) {
+            return 0;
+        }
+        String sql = "delete from tasks where team_id in ("
+                + placeholders(teamIds.size()) + ")";
+        return jdbc.update(sql, teamIds.toArray());
+    }
+
     private static void setNullableLong(PreparedStatement statement, int index, Long value) throws SQLException {
         if (value == null) {
             statement.setNull(index, Types.BIGINT);

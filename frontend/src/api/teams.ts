@@ -46,3 +46,9 @@ export function removeTeamMember(teamId: number, membershipId: number) {
     method: "DELETE"
   });
 }
+
+export function deleteTeam(teamId: number) {
+  return apiRequest<void>(`/api/teams/${teamId}`, {
+    method: "DELETE"
+  });
+}

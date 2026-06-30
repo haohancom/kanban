@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import TeamAdminPage, { type TeamAdminApi } from "./TeamAdminPage";
@@ -7,6 +7,7 @@ import { Team } from "../types";
 const selectedTeam: Team = {
   id: 1,
   name: "研发部",
+  role: "TEAM_CREATOR",
   children: []
 };
 
@@ -39,7 +40,8 @@ describe("TeamAdminPage", () => {
         displayName: "小王",
         role: values.role
       })),
-      removeMember: vi.fn(async () => undefined)
+      removeMember: vi.fn(async () => undefined),
+      deleteTeam: vi.fn(async () => undefined)
     };
 
     render(<TeamAdminPage selectedTeam={selectedTeam} onTeamsChanged={vi.fn()} api={api} />);
@@ -55,5 +57,74 @@ describe("TeamAdminPage", () => {
     expect(api.createTeam).toHaveBeenCalledWith({ name: "平台组", parentId: 1 });
     expect(api.listAssignableUsers).toHaveBeenCalledWith(1);
     expect(api.addMember).toHaveBeenCalledWith(1, { userId: 2, role: "TEAM_MEMBER" });
+  });
+
+  it("requires two confirmations before deleting a team", async () => {
+    const user = userEvent.setup();
+    const deleteTeam = vi.fn(async () => undefined);
+    const api: TeamAdminApi = {
+      listMembers: vi.fn(async () => []),
+      listAssignableUsers: vi.fn(async () => []),
+      createTeam: vi.fn(async (values) => ({ id: 2, name: values.name, parentId: values.parentId, children: [] })),
+      updateTeam: vi.fn(async (teamId, values) => ({ id: teamId, name: values.name, children: [] })),
+      addMember: vi.fn(async () => ({ id: 3, teamId: 1, userId: 2, username: "wang", displayName: "小王", role: "TEAM_MEMBER" as const })),
+      updateMember: vi.fn(async (teamId, membershipId, values) => ({
+        id: membershipId,
+        teamId,
+        userId: 2,
+        username: "wang",
+        displayName: "小王",
+        role: values.role
+      })),
+      removeMember: vi.fn(async () => undefined),
+      deleteTeam
+    };
+
+    render(<TeamAdminPage selectedTeam={selectedTeam} onTeamsChanged={vi.fn()} api={api} />);
+
+    await user.click(screen.getByRole("button", { name: "删除团队" }));
+
+    const firstConfirm = screen.getByRole("dialog", { name: "确认删除团队" });
+    expect(firstConfirm).toBeInTheDocument();
+    expect(within(firstConfirm).getByRole("button", { name: "确认删除" })).toHaveClass("danger-button");
+    await user.click(within(firstConfirm).getByRole("button", { name: "确认删除" }));
+
+    const secondConfirm = screen.getByRole("dialog", { name: "再次确认删除团队" });
+    expect(secondConfirm).toBeInTheDocument();
+    expect(within(secondConfirm).getByRole("button", { name: "确认删除" })).toHaveClass("danger-button");
+    await user.click(within(secondConfirm).getByRole("button", { name: "确认删除" }));
+
+    expect(deleteTeam).toHaveBeenCalledWith(1);
+    expect(deleteTeam).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides delete action for non-creators", () => {
+    const api: TeamAdminApi = {
+      listMembers: vi.fn(async () => []),
+      listAssignableUsers: vi.fn(async () => []),
+      createTeam: vi.fn(async (values) => ({ id: 2, name: values.name, parentId: values.parentId, children: [] })),
+      updateTeam: vi.fn(async (teamId, values) => ({ id: teamId, name: values.name, children: [] })),
+      addMember: vi.fn(async () => ({ id: 3, teamId: 1, userId: 2, username: "wang", displayName: "小王", role: "TEAM_MEMBER" as const })),
+      updateMember: vi.fn(async (teamId, membershipId, values) => ({
+        id: membershipId,
+        teamId,
+        userId: 2,
+        username: "wang",
+        displayName: "小王",
+        role: values.role
+      })),
+      removeMember: vi.fn(async () => undefined),
+      deleteTeam: vi.fn(async () => undefined)
+    };
+
+    render(
+      <TeamAdminPage
+        selectedTeam={{ ...selectedTeam, role: "TEAM_ADMIN" }}
+        onTeamsChanged={vi.fn()}
+        api={api}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "删除团队" })).not.toBeInTheDocument();
   });
 });

@@ -694,6 +694,15 @@ form {
   color: #17202a;
 }
 
+.danger-button {
+  background: #b42318;
+  color: #fff;
+}
+
+.danger-button:hover {
+  background: #991b1b;
+}
+
 .status-move {
   display: grid;
   gap: 5px;

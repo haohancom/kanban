@@ -171,7 +171,7 @@ class TeamAuthorizationTest extends IntegrationTestSupport {
     }
 
     @Test
-    void administratorDeletesOnlyEmptyTeams() throws Exception {
+    void administratorDeletesTeamTreeIncludingChildrenAndTasks() throws Exception {
         Fixture fixture = createTeamWithMember();
 
         String child = mvc.perform(post("/api/teams").session(fixture.adminSession)
@@ -181,11 +181,65 @@ class TeamAuthorizationTest extends IntegrationTestSupport {
                 .andReturn().getResponse().getContentAsString();
         long childId = readJsonLong(child, "$.id");
 
-        mvc.perform(delete("/api/teams/" + fixture.teamId).session(fixture.adminSession))
-                .andExpect(status().isConflict());
+        String grandChild = mvc.perform(post("/api/teams").session(fixture.adminSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"孙组\",\"parentId\":" + childId + "}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long grandChildId = readJsonLong(grandChild, "$.id");
 
-        mvc.perform(delete("/api/teams/" + childId).session(fixture.adminSession))
+        createSprint(fixture.teamId, "Root Sprint");
+        createSprint(childId, "Child Sprint");
+        createSprint(grandChildId, "Grand Child Sprint");
+        jdbc.update("insert into tasks (team_id, title, created_by) values (?, ?, ?)", fixture.teamId, "root任务", fixture.adminUserId);
+        jdbc.update("insert into tasks (team_id, title, created_by) values (?, ?, ?)", childId, "child任务", fixture.adminUserId);
+        jdbc.update("insert into tasks (team_id, title, created_by) values (?, ?, ?)", grandChildId, "grand任务", fixture.adminUserId);
+
+        mvc.perform(delete("/api/teams/" + fixture.teamId).session(fixture.adminSession))
                 .andExpect(status().isNoContent());
+
+        assertThat(countRows("teams", "id", fixture.teamId)).isEqualTo(0);
+        assertThat(countRows("teams", "id", childId)).isEqualTo(0);
+        assertThat(countRows("teams", "id", grandChildId)).isEqualTo(0);
+        assertThat(countRows("tasks", "team_id", fixture.teamId)).isEqualTo(0);
+        assertThat(countRows("tasks", "team_id", childId)).isEqualTo(0);
+        assertThat(countRows("tasks", "team_id", grandChildId)).isEqualTo(0);
+        assertThat(countRows("sprints", "team_id", fixture.teamId)).isEqualTo(0);
+        assertThat(countRows("sprints", "team_id", childId)).isEqualTo(0);
+        assertThat(countRows("sprints", "team_id", grandChildId)).isEqualTo(0);
+    }
+
+    @Test
+    void teamAdminCannotDeleteTeam() throws Exception {
+        Fixture fixture = createTeamWithMember();
+        long memberMembershipId = membershipIdFor(fixture.teamId, fixture.memberUserId);
+        jdbc.update(
+                "update team_memberships set role = 'TEAM_ADMIN' where id = ?",
+                memberMembershipId);
+
+        mvc.perform(delete("/api/teams/" + fixture.teamId).session(fixture.memberSession))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(delete("/api/teams/" + fixture.teamId).session(fixture.adminSession))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void teamCreatorCanDeleteOwnTeam() throws Exception {
+        createPlainMemberUser("creator-team", "创建者");
+        MockHttpSession creatorSession = loginAsUser("creator-team", "member123");
+
+        String created = mvc.perform(post("/api/teams").session(creatorSession)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"个人团队\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long teamId = readJsonLong(created, "$.id");
+
+        mvc.perform(delete("/api/teams/" + teamId).session(creatorSession))
+                .andExpect(status().isNoContent());
+
+        assertThat(countRows("teams", "id", teamId)).isEqualTo(0);
     }
 
     @Test
@@ -210,6 +264,14 @@ class TeamAuthorizationTest extends IntegrationTestSupport {
         } finally {
             jdbc.execute("drop trigger if exists fail_team_delete");
         }
+    }
+
+    private long countRows(String table, String column, long value) {
+        Integer count = jdbc.queryForObject(
+                "select count(*) from " + table + " where " + column + " = ?",
+                Integer.class,
+                value);
+        return count == null ? 0 : count;
     }
 
     private long readJsonLong(String json, String path) {

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   addTeamMember,
   createTeam,
+  deleteTeam,
   listAssignableUsers,
   listTeamMembers,
   removeTeamMember,
@@ -19,12 +20,14 @@ export interface TeamAdminApi {
   addMember: (teamId: number, values: { userId: number; role: TeamRole }) => Promise<TeamMember>;
   updateMember: (teamId: number, membershipId: number, values: { role: TeamRole }) => Promise<TeamMember>;
   removeMember: (teamId: number, membershipId: number) => Promise<void>;
+  deleteTeam: (teamId: number) => Promise<void>;
 }
 
 interface TeamAdminPageProps {
   api?: TeamAdminApi;
   onTeamsChanged: () => void;
   selectedTeam: Team | null;
+  canDeleteTeam?: boolean;
 }
 
 const defaultTeamAdminApi: TeamAdminApi = {
@@ -34,7 +37,8 @@ const defaultTeamAdminApi: TeamAdminApi = {
   updateTeam,
   addMember: addTeamMember,
   updateMember: updateTeamMember,
-  removeMember: removeTeamMember
+  removeMember: removeTeamMember,
+  deleteTeam
 };
 
 const roleOptions: Array<{ value: TeamRole; label: string }> = [
@@ -46,7 +50,8 @@ const roleOptions: Array<{ value: TeamRole; label: string }> = [
 export default function TeamAdminPage({
   api = defaultTeamAdminApi,
   onTeamsChanged,
-  selectedTeam
+  selectedTeam,
+  canDeleteTeam
 }: TeamAdminPageProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
@@ -60,12 +65,17 @@ export default function TeamAdminPage({
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [membersReloadKey, setMembersReloadKey] = useState(0);
+  const [deletePhase, setDeletePhase] = useState<"first" | "second" | null>(null);
+  const [pendingTeamDelete, setPendingTeamDelete] = useState<{ id: number; name: string } | null>(null);
   const selectedTeamId = selectedTeam?.id ?? null;
+  const canDeleteCurrentTeam = canDeleteTeam ?? selectedTeam?.role === "TEAM_CREATOR";
 
   useEffect(() => {
     setTeamName(selectedTeam?.name ?? "");
     setMemberUserId("");
     setMemberRole("TEAM_MEMBER");
+    setDeletePhase(null);
+    setPendingTeamDelete(null);
   }, [selectedTeam]);
 
   useEffect(() => {
@@ -166,6 +176,38 @@ export default function TeamAdminPage({
     });
   }
 
+  function requestDeleteTeam() {
+    if (selectedTeamId === null) {
+      return;
+    }
+    setDeletePhase("first");
+    setPendingTeamDelete({ id: selectedTeamId, name: selectedTeam?.name ?? "" });
+  }
+
+  function confirmDeleteTeamRequest() {
+    if (!pendingTeamDelete) {
+      return;
+    }
+    setDeletePhase("second");
+  }
+
+  function cancelTeamDelete() {
+    setDeletePhase(null);
+    setPendingTeamDelete(null);
+  }
+
+  async function confirmDeleteTeam() {
+    if (!pendingTeamDelete) {
+      return;
+    }
+    const request = pendingTeamDelete;
+    await runTeamAction(async () => {
+      await api.deleteTeam(request.id);
+      setMessage("团队已删除");
+      cancelTeamDelete();
+    });
+  }
+
   async function runAction(action: () => Promise<void>) {
     setBusy(true);
     setError(null);
@@ -189,6 +231,13 @@ export default function TeamAdminPage({
           <p className="workspace-kicker">团队管理</p>
           <h2 id="team-admin-title">{selectedTeam?.name ?? "团队"}</h2>
         </div>
+        {selectedTeamId !== null && canDeleteCurrentTeam && (
+          <div className="toolbar-actions">
+            <button type="button" className="danger-button" disabled={busy} onClick={requestDeleteTeam}>
+              删除团队
+            </button>
+          </div>
+        )}
       </div>
 
       {error && <p className="form-error">{error}</p>}
@@ -318,6 +367,69 @@ export default function TeamAdminPage({
               </tbody>
             </table>
           </div>
+          {pendingTeamDelete && deletePhase === "first" && (
+            <div className="modal-backdrop">
+              <section
+                className="task-modal confirm-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="confirm-delete-team-title"
+              >
+                <div className="modal-heading">
+                  <div>
+                    <p className="workspace-kicker">不可撤销</p>
+                    <h3 id="confirm-delete-team-title">确认删除团队</h3>
+                  </div>
+                </div>
+                <p>确认删除团队“{pendingTeamDelete.name}”吗？该操作会删除该团队及其子团队。</p>
+                <div className="modal-actions">
+                  <button type="button" className="secondary-button" onClick={cancelTeamDelete}>
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="danger-button"
+                    onClick={() => void confirmDeleteTeamRequest()}
+                  >
+                    确认删除
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {pendingTeamDelete && deletePhase === "second" && (
+            <div className="modal-backdrop">
+              <section
+                className="task-modal confirm-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="confirm-delete-team-title-2"
+              >
+                <div className="modal-heading">
+                  <div>
+                    <p className="workspace-kicker">最终确认</p>
+                    <h3 id="confirm-delete-team-title-2">再次确认删除团队</h3>
+                  </div>
+                </div>
+                <p>此操作不可撤销。确认再次删除团队“{pendingTeamDelete.name}”吗？</p>
+                <div className="modal-actions">
+                  <button type="button" className="secondary-button" onClick={cancelTeamDelete}>
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="danger-button"
+                    onClick={() => void confirmDeleteTeam()}
+                  >
+                    确认删除
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
         </>
       )}
     </section>

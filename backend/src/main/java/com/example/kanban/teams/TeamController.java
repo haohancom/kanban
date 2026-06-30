@@ -78,10 +78,7 @@ public class TeamController {
     public void delete(Authentication authentication, @PathVariable long id) {
         CurrentUser currentUser = currentUser(authentication);
         findTeamOrThrow(id);
-        requireCanManageTeam(currentUser.getId(), id);
-        if (teamRepository.hasChildren(id) || teamRepository.hasSprints(id) || teamRepository.hasTasks(id)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
-        }
+        requireCanDeleteTeam(currentUser.getId(), id);
         teamService.deleteTeam(id);
     }
 
@@ -124,6 +121,12 @@ public class TeamController {
 
     private void requireCanManageTeam(long userId, long teamId) {
         if (!authorizationService.canManageTeam(userId, teamId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private void requireCanDeleteTeam(long userId, long teamId) {
+        if (!authorizationService.canDeleteTeam(userId, teamId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }

@@ -60,6 +60,13 @@ public class AuthorizationService {
         return hasManagementRoleOnTeamOrAncestor(userId, teamId);
     }
 
+    public boolean canDeleteTeam(long userId, long teamId) {
+        if (isSuperAdministrator(userId)) {
+            return teamRepository.findById(teamId).isPresent();
+        }
+        return roleFor(userId, teamId).orElse(null) == TeamRole.TEAM_CREATOR;
+    }
+
     public List<Long> descendantTeamIds(long teamId) {
         List<TeamRepository.TeamRecord> teams = teamRepository.listAll();
         if (teams.stream().noneMatch(team -> team.getId() == teamId)) {

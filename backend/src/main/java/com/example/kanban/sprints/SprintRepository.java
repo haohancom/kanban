@@ -79,6 +79,16 @@ public class SprintRepository {
         jdbc.update("delete from sprints where id = ?", id);
     }
 
+    public void deleteByTeamIds(List<Long> teamIds) {
+        if (teamIds.isEmpty()) {
+            return;
+        }
+        String placeholders = teamIds.stream()
+                .map(ignored -> "?")
+                .collect(Collectors.joining(","));
+        jdbc.update("delete from sprints where team_id in (" + placeholders + ")", teamIds.toArray());
+    }
+
     private static SprintRecord mapSprint(ResultSet resultSet, int rowNumber) throws SQLException {
         return new SprintRecord(
                 resultSet.getLong("id"),
